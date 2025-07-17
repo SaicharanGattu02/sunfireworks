@@ -1,0 +1,108 @@
+# Flutter/Dart/Pub related
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+.pub-cache/
+.pub/
+build/
+**/doc/api/
+**/ios/Flutter/.last_build_id
+generated_plugin_registrant.dart
+
+# Android related
+/android/.gradle/
+/android/app/debug/
+/android/app/profile/
+/android/app/release/
+*.keystore
+*.jks
+*.apk
+*.aab
+*.dex
+/local.properties
+/android/key.properties
+
+# iOS related
+ios/Flutter/App.framework
+ios/Flutter/Flutter.framework
+ios/.symlinks
+ios/Pods
+ios/Runner.xcworkspace
+ios/Runner.xcodeproj/project.xcworkspace
+ios/build/
+
+# macOS
+macos/Flutter/ephemeral/
+macos/build/
+
+# Web
+web/.dart_tool/
+web/build/
+
+# Windows
+windows/Flutter/ephemeral/
+windows/build/
+
+# Linux
+linux/Flutter/ephemeral/
+linux/build/
+
+# VS Code
+.vscode/
+
+# IntelliJ / Android Studio
+.idea/
+*.iml
+
+# Miscellaneous
+*.class
+*.log
+*.pyc
+*.swp
+*.tmp
+*.bak
+*.orig
+*.rej
+*.swo
+*.swn
+*.db
+*.sqlite
+*.db-journal
+*.lock
+*.log.*
+*.tgz
+*.tar.gz
+*.zip
+*.7z
+
+# macOS
+.DS_Store
+
+# Node / JS if used
+node_modules/
+npm-debug.log
+
+# Secure/Secrets
+.env
+.env.*
+.secret
+.secret.*
+*.pem
+*.key
+*.crt
+*.p12
+*.cer
+
+# Symbolication & obfuscation
+app.*.symbols
+app.*.map.json
+
+# Migration / scratch
+migrate_working_dir/
+.atom/
+.build/
+.buildlog/
+.history
+.svn/
+.swiftpm/
