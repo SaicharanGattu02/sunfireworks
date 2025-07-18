@@ -20,23 +20,23 @@ final ThemeData darkTheme = ThemeData(
     hintStyle: AppTextStyles.titleMedium(Colors.black.withOpacity(0.25)),
     contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 14),
     border: OutlineInputBorder(
-      borderRadius: BorderRadius.circular(7),
+      borderRadius: BorderRadius.circular(24),
       borderSide: BorderSide(color: AppColors.darkBorder),
     ),
     enabledBorder: OutlineInputBorder(
-      borderRadius: BorderRadius.circular(7),
+      borderRadius: BorderRadius.circular(24),
       borderSide: BorderSide(color: AppColors.darkBorder),
     ),
     focusedBorder: OutlineInputBorder(
-      borderRadius: BorderRadius.circular(7),
+      borderRadius: BorderRadius.circular(24),
       borderSide: BorderSide(color: AppColors.darkBorder),
     ),
     errorBorder: OutlineInputBorder(
-      borderRadius: BorderRadius.circular(7),
+      borderRadius: BorderRadius.circular(24),
       borderSide: BorderSide(color: AppColors.darkBorder),
     ),
     focusedErrorBorder: OutlineInputBorder(
-      borderRadius: BorderRadius.circular(7),
+      borderRadius: BorderRadius.circular(24),
       borderSide: BorderSide(color: AppColors.darkBorder),
     ),
     errorStyle: TextStyle(
@@ -83,7 +83,7 @@ final ThemeData darkTheme = ThemeData(
   ).copyWith(background: Colors.white),
   // Optionally, set directly as fallback
   primaryColor: Colors.white,
-  fontFamily: 'Roboto',
+  fontFamily: 'roboto',
   textTheme: TextTheme(
     displayLarge: AppTextStyles.displayLarge(AppColors.darkText),
     displayMedium: AppTextStyles.displayMedium(AppColors.darkText),

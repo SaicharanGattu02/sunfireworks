@@ -13,14 +13,14 @@ class _SplashscreenState extends State<Splashscreen> {
   void initState() {
     super.initState();
     Future.delayed(Duration(seconds: 2), () {
-      context.pushReplacement("/dashboard");
+      context.pushReplacement("/sign_in_with_mobile");
     });
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Center(child: Image.asset("assets/images/appicon.png")),
+      body: Center(child: Image.asset("assets/images/rocket.png")),
     );
   }
 }

@@ -5,6 +5,7 @@ import '../theme/ThemeHelper.dart';
 
 class CommonTextField extends StatelessWidget {
   final String hint;
+  final String lable;
   final Color color;
   final int maxLines;
   final TextEditingController? controller;
@@ -16,10 +17,12 @@ class CommonTextField extends StatelessWidget {
   final bool showError;
   final String errorKey;
   final String errorMsg;
+  final String? Function(String?)? validator; // ✅ Add this
 
   const CommonTextField({
     super.key,
     required this.hint,
+    required this.lable,
     required this.color,
     this.maxLines = 1,
     this.controller,
@@ -31,13 +34,25 @@ class CommonTextField extends StatelessWidget {
     this.showError = false,
     this.errorKey = '',
     this.errorMsg = '',
+    this.validator,
   });
 
   @override
   Widget build(BuildContext context) {
+    final isDarkMode = ThemeHelper.isDarkMode(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        Text(
+          lable,
+          style: TextStyle(
+            fontFamily: 'Roboto',
+            fontSize: 22,
+            fontWeight: FontWeight.w500,
+            color: isDarkMode ? Colors.white : Colors.black,
+          ),
+        ),
+        SizedBox(height: 16),
         TextField(
           style: AppTextStyles.bodyMedium(color),
           controller: controller,
@@ -51,7 +66,14 @@ class CommonTextField extends StatelessWidget {
               vertical: 15,
             ),
             hintText: hint,
-            hintStyle: AppTextStyles.bodyMedium(color.withOpacity(0.6)),
+            hintStyle: TextStyle(
+              fontFamily: 'roboto',
+              fontWeight: FontWeight.w200,
+              fontSize: 16,
+              color: isDarkMode
+                  ? Colors.white.withOpacity(0.2)
+                  : Colors.black.withOpacity(0.2),
+            ),
             border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
             prefixIcon: prefixIcon,
             suffixIcon: suffixIcon,
@@ -66,7 +88,7 @@ class CommonTextField extends StatelessWidget {
               child: Text(
                 errorMsg,
                 style: const TextStyle(
-                  fontFamily: 'Inter',
+                  fontFamily: 'roboto',
                   fontSize: 12,
                   color: Colors.red,
                   fontWeight: FontWeight.w500,
@@ -138,7 +160,7 @@ class _CommonTextField1State extends State<CommonTextField1> {
         ),
         const SizedBox(height: 10),
         TextFormField(
-          style: AppTextStyles.bodyMedium(widget.color),
+          style: AppTextStyles.bodyMedium(textColor),
           controller: widget.controller,
           keyboardType: widget.keyboardType,
           obscureText: widget.obscureText,
@@ -157,6 +179,7 @@ class _CommonTextField1State extends State<CommonTextField1> {
                   errorMsg = validationMsg;
                 });
               });
+              return '';
             } else {
               WidgetsBinding.instance.addPostFrameCallback((_) {
                 setState(() {
@@ -164,12 +187,25 @@ class _CommonTextField1State extends State<CommonTextField1> {
                   errorMsg = '';
                 });
               });
+              return null;
             }
-            return null;
           },
-          decoration: InputDecoration(
+
+          decoration: InputDecoration( errorStyle: const TextStyle(height: -10),
             hintText: widget.hint,
-            hintStyle: TextStyle(color: textColor.withOpacity(0.6)),
+            hintStyle: AppTextStyles.bodySmall(textColor).copyWith(
+              color: textColor.withOpacity(0.2),
+              fontWeight: widget.lableFontWeight ?? FontWeight.w200,
+              fontSize: 14
+            ),
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 16,
+              vertical: 20,
+            ),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(24),
+              borderSide: const BorderSide(color: Colors.grey),
+            ),
             prefixIcon: widget.prefixIcon,
             suffixIcon: widget.suffixIcon,
           ),
@@ -183,7 +219,7 @@ class _CommonTextField1State extends State<CommonTextField1> {
               child: Text(
                 errorMsg,
                 style: const TextStyle(
-                  fontFamily: 'Inter',
+                  fontFamily: 'roboto',
                   fontSize: 12,
                   color: Colors.red,
                   fontWeight: FontWeight.w500,
@@ -195,4 +231,3 @@ class _CommonTextField1State extends State<CommonTextField1> {
     );
   }
 }
-

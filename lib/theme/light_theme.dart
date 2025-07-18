@@ -20,29 +20,29 @@ final ThemeData lightTheme = ThemeData(
     hintStyle: AppTextStyles.titleMedium(Colors.black.withOpacity(0.25)),
     contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 14),
     border: OutlineInputBorder(
-      borderRadius: BorderRadius.circular(7),
+      borderRadius: BorderRadius.circular(24),
       borderSide: BorderSide(color: AppColors.lightBorder),
     ),
     enabledBorder: OutlineInputBorder(
-      borderRadius: BorderRadius.circular(7),
+      borderRadius: BorderRadius.circular(24),
       borderSide: BorderSide(color: AppColors.lightBorder),
     ),
     focusedBorder: OutlineInputBorder(
-      borderRadius: BorderRadius.circular(7),
+      borderRadius: BorderRadius.circular(24),
       borderSide: BorderSide(color: AppColors.lightBorder),
     ),
     errorBorder: OutlineInputBorder(
-      borderRadius: BorderRadius.circular(7),
+      borderRadius: BorderRadius.circular(24),
       borderSide: BorderSide(color: AppColors.lightBorder),
     ),
     focusedErrorBorder: OutlineInputBorder(
-      borderRadius: BorderRadius.circular(7),
+      borderRadius: BorderRadius.circular(24),
       borderSide: BorderSide(color: AppColors.lightBorder),
     ),
     errorStyle: TextStyle(
       fontWeight: FontWeight.w400,
       fontSize: 13,
-      color: Colors.red,
+      color: Colors.red,fontFamily: 'roboto'
     ),
   ),
   dialogTheme: const DialogThemeData(
@@ -82,7 +82,7 @@ final ThemeData lightTheme = ThemeData(
   ).copyWith(background: Colors.black),
   // Optionally, set directly as fallback
   primaryColor: Colors.black,
-  fontFamily: 'Roboto',
+  fontFamily: 'roboto',
   textTheme: TextTheme(
     displayLarge: AppTextStyles.displayLarge(AppColors.lightText),
     displayMedium: AppTextStyles.displayMedium(AppColors.lightText),

@@ -68,7 +68,9 @@ class CustomAppButton1 extends StatelessWidget implements PreferredSizeWidget {
   final Color? textcolor;
   final VoidCallback? onPlusTap;
   final bool isLoading;
-  CustomAppButton1({
+  final Gradient? gradient;
+
+  const CustomAppButton1({
     Key? key,
     required this.text,
     required this.onPlusTap,
@@ -77,48 +79,67 @@ class CustomAppButton1 extends StatelessWidget implements PreferredSizeWidget {
     this.height,
     this.width,
     this.isLoading = false,
+    this.gradient,
   }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    var w = MediaQuery.of(context).size.width;
-    var h = MediaQuery.of(context).size.height;
+    final double buttonWidth = width ?? MediaQuery.of(context).size.width;
+
     return SizedBox(
-      width: width ?? w,
+      width: buttonWidth,
       height: height ?? 48,
       child: ElevatedButton(
         style: ElevatedButton.styleFrom(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-          backgroundColor: color ?? AppColors.primary,
-          foregroundColor: color ?? Colors.white,
-          disabledBackgroundColor: color ?? Colors.white,
-          disabledForegroundColor: color ?? Colors.white,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(30),
+          ),
+          padding: EdgeInsets.zero,
+          elevation: 0,
+          backgroundColor: Colors.transparent,
           shadowColor: Colors.transparent,
-          overlayColor: Colors.transparent,
         ),
         onPressed: isLoading ? null : onPlusTap,
-        child: isLoading
-            ? const SizedBox(
-                height: 24,
-                width: 24,
-                child: CircularProgressIndicator(
-                  valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
-                  strokeWidth: 2,
+        child: Ink(
+          decoration: BoxDecoration(
+            color: gradient == null ? (color ?? Colors.blue) : null,
+            gradient: gradient ??
+                const LinearGradient(
+                  colors: [
+                    Color(0xFFFF8181),
+                    Color.fromRGBO(255, 15, 15, 0.8),
+                  ],
+                  begin: Alignment.centerLeft,
+                  end: Alignment.centerRight,
                 ),
-              )
-            : Text(
-                text,
-                style: TextStyle(
-                  color: textcolor ?? Colors.white,
-                  fontWeight: FontWeight.w600,
-                  fontFamily: "Poppins",
-                  fontSize: 16,
-                ),
+            borderRadius: BorderRadius.circular(30),
+          ),
+          child: Center(
+            child: isLoading
+                ?  SizedBox(
+              height: 24,
+              width: 24,
+              child: CircularProgressIndicator(
+                valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                strokeWidth: 1,
               ),
+            )
+                : Text(
+              text,
+              style: TextStyle(
+                fontFamily: 'Roboto',
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: textcolor ?? Colors.white,
+              ),
+            ),
+          ),
+        ),
       ),
     );
   }
 
   @override
-  Size get preferredSize => throw UnimplementedError();
+  Size get preferredSize => const Size.fromHeight(60);
 }
+

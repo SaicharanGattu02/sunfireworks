@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:sunfireworks/theme/AppTheme.dart';
+import 'package:sunfireworks/utils/media_query_helper.dart';
 import 'app_routes/StateInjector.dart';
 import 'app_routes/router.dart';
 import 'data/cubit/theme_cubit.dart';
@@ -27,6 +28,7 @@ class MyApp extends StatefulWidget {
 class _MyAppState extends State<MyApp> {
   @override
   Widget build(BuildContext context) {
+    SizeConfig.init(context);
     return BlocBuilder<ThemeCubit, AppThemeMode>(
       builder: (context, appThemeMode) {
         ThemeMode themeMode;

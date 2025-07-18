@@ -8,6 +8,6 @@ class AppColors {
   static const unselect = Color(0xFF6B7280);
   static const lightText =Color(0xFFFFFFFF);
   static const darkText = Color(0xFF000000);
-  static const lightBorder = Color(0xFFD1D5DB);
+  static const lightBorder = Color(0x338B8B8B);
   static const darkBorder = Color(0xFF666666);
 }

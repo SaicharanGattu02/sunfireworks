@@ -3,8 +3,9 @@ import 'package:flutter/animation.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import '../Presentation/Authentication/Otp.dart';
+import '../Presentation/Authentication/SignInWithMobile.dart';
 import '../Presentation/SplashScreen.dart';
-
 
 final GoRouter appRouter = GoRouter(
   initialLocation: '/',
@@ -14,7 +15,18 @@ final GoRouter appRouter = GoRouter(
       pageBuilder: (context, state) =>
           buildSlideTransitionPage(Splashscreen(), state),
     ),
-
+    GoRoute(
+      path: '/sign_in_with_mobile',
+      pageBuilder: (context, state) {
+        return buildSlideTransitionPage(SignInWithMobile(), state);
+      },
+    ),
+    GoRoute(
+      path: '/otp',
+      pageBuilder: (context, state) {
+        return buildSlideTransitionPage(Otp(), state);
+      },
+    ),
   ],
 );
 
