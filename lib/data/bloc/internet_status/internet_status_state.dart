@@ -1,9 +1,6 @@
 part of 'internet_status_bloc.dart';
 
-abstract class InternetStatusState extends Equatable {
-  @override
-  List<Object> get props => [];
-}
+abstract class InternetStatusState  {}
 
 // Initial state
 class InternetStatusInitial extends InternetStatusState {}

@@ -2,11 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:pin_code_fields/pin_code_fields.dart';
 import 'package:sunfireworks/Components/CustomAppButton.dart';
 import 'package:sunfireworks/utils/media_query_helper.dart';
-import 'package:sunfireworks/widgets/CommonTextField.dart';
 import '../../Components/ShakeWidget.dart';
 import '../../theme/AppTextStyles.dart';
 import '../../theme/ThemeHelper.dart';
-import '../../utils/color_constants.dart';
 
 class Otp extends StatefulWidget {
   const Otp({super.key});
@@ -23,7 +21,6 @@ class _OtpState extends State<Otp> {
   @override
   Widget build(BuildContext context) {
     final textColor = ThemeHelper.textColor(context);
-
     return Scaffold(
       backgroundColor: Colors.white,
       body: Stack(
@@ -58,12 +55,14 @@ class _OtpState extends State<Otp> {
                       ).copyWith(fontWeight: FontWeight.w600),
                     ),
                     const SizedBox(height: 18),
-                    Align(alignment: Alignment.topLeft,
+                    Align(
+                      alignment: Alignment.topLeft,
                       child: Text(
                         "Enter OTP",
-                        style: AppTextStyles.titleLarge(
-                          textColor,
-                        ).copyWith(fontWeight: FontWeight.w500,color: Color(0xffBDBDBD)),
+                        style: AppTextStyles.titleLarge(textColor).copyWith(
+                          fontWeight: FontWeight.w500,
+                          color: Color(0xffBDBDBD),
+                        ),
                       ),
                     ),
 
@@ -78,9 +77,9 @@ class _OtpState extends State<Otp> {
                       animationDuration: const Duration(milliseconds: 300),
                       backgroundColor: Colors.transparent,
                       enableActiveFill: true,
-                      textStyle:AppTextStyles.headlineSmall(textColor).copyWith(
-                            fontWeight: FontWeight.w600,
-                          ),
+                      textStyle: AppTextStyles.headlineSmall(
+                        textColor,
+                      ).copyWith(fontWeight: FontWeight.w600),
                       onChanged: (_) {
                         setState(() {
                           _showOtpError = false;
@@ -92,9 +91,9 @@ class _OtpState extends State<Otp> {
                         fieldHeight: 60,
                         fieldWidth: 60,
                         activeColor: Color(0xffE9E9E9),
-                        inactiveColor:Color(0xffE9E9E9),
-                        selectedColor:Color(0xffE9E9E9),
-                        activeFillColor:Color(0xffE9E9E9),
+                        inactiveColor: Color(0xffE9E9E9),
+                        selectedColor: Color(0xffE9E9E9),
+                        activeFillColor: Color(0xffE9E9E9),
                         inactiveFillColor: Color(0xffE9E9E9),
                         selectedFillColor: Color(0xffE9E9E9),
                       ),

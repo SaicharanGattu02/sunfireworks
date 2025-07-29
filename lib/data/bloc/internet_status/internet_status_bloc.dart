@@ -1,8 +1,5 @@
 import 'dart:async';
-
-
 import 'package:dio/dio.dart';
-import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 part 'internet_status_event.dart';
