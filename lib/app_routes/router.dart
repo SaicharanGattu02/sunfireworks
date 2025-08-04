@@ -4,10 +4,15 @@ import 'package:flutter/animation.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:sunfireworks/Presentation/DashBoard.dart';
 import 'package:sunfireworks/Presentation/DriverProfileScreen.dart';
+import 'package:sunfireworks/Presentation/TipperDriver/DelivaryDetailsScreen.dart';
 import 'package:sunfireworks/Presentation/TipperDriver/HomeScreen.dart';
 import '../Presentation/Authentication/Otp.dart';
 import '../Presentation/Authentication/SignInWithMobile.dart';
+import '../Presentation/TipperDriver/DistributeLocationsScreen.dart';
+
+import '../Presentation/TipperDriver/DeliveryByLocationsScreen.dart';
 import '../Presentation/TipperDriver/OrdersScreen.dart';
 
 final GoRouter appRouter = GoRouter(
@@ -16,7 +21,7 @@ final GoRouter appRouter = GoRouter(
     GoRoute(
       path: '/',
       pageBuilder: (context, state) =>
-          buildSlideTransitionPage(HomeScreen(), state),
+          buildSlideTransitionPage(Dashboard(), state),
     ),
     GoRoute(
       path: '/sign_in_with_mobile',
@@ -46,6 +51,24 @@ final GoRouter appRouter = GoRouter(
       path: '/home',
       pageBuilder: (context, state) {
         return buildSlideTransitionPage(HomeScreen(), state);
+      },
+    ),
+    GoRoute(
+      path: '/distribute_locations',
+      pageBuilder: (context, state) {
+        return buildSlideTransitionPage(DistributeLocationsScreen(), state);
+      },
+    ),
+    GoRoute(
+      path: '/delivery_details',
+      pageBuilder: (context, state) {
+        return buildSlideTransitionPage(DeliveryDetails(), state);
+      },
+    ),
+    GoRoute(
+      path: '/delivery_by_locations',
+      pageBuilder: (context, state) {
+        return buildSlideTransitionPage(DeliveryByLocationsScreen(), state);
       },
     ),
   ],

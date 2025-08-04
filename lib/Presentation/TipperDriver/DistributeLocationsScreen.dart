@@ -1,138 +1,179 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-class HomeScreen extends StatelessWidget {
-  const HomeScreen({super.key});
+class DistributeLocationsScreen extends StatelessWidget {
+  const DistributeLocationsScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.grey[50],
+      appBar: AppBar(
+        backgroundColor: Colors.grey[50],
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Colors.black),
+          onPressed: () => Navigator.pop(context),
+        ),
+        centerTitle: true,
+        title: const Text(
+          "Disturb by Locations",
+          style: TextStyle(
+            fontFamily: "roboto",
+            fontWeight: FontWeight.w600,
+            fontSize: 18,
+            color: Colors.black,
+          ),
+        ),
+      ),
       body: Padding(
         padding: const EdgeInsets.only(bottom: 20.0),
         child: CustomScrollView(
           slivers: [
-            // AppBar
-            SliverAppBar(
-              pinned: true,
-              floating: false,
-              elevation: 0,
-              backgroundColor: Colors.white,
-              leading: IconButton(
-                icon: const Icon(Icons.person, color: Colors.black),
-                onPressed: () {},
-              ),
-              centerTitle: true,
-              title: const Text(
-                "Sun Fireworks",
-                style: TextStyle(
-                  fontFamily: "roboto",
-                  fontWeight: FontWeight.w600,
-                  fontSize: 18,
-                  color: Colors.black,
-                ),
-              ),
-              actions: [
-                // IconButton(
-                //   icon: const Icon(
-                //     Icons.notifications_none,
-                //     color: Colors.black,
-                //   ),
-                //   onPressed: () {},
-                // ),
-              ],
-            ),
-
-            // Truck Card
+            // Header Card with Gradient
             SliverToBoxAdapter(
               child: Container(
                 margin: const EdgeInsets.all(16),
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  gradient: const LinearGradient(
+                    colors: [Color(0xFFFF512F), Color(0xFFF09819)],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
                   borderRadius: BorderRadius.circular(16),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.grey.shade200,
-                      blurRadius: 6,
-                      offset: const Offset(0, 3),
-                    ),
-                  ],
                 ),
                 child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                  crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
-                    // Truck Image with dynamic text
-                    Stack(
-                      alignment: Alignment.center,
-                      children: [
-                        Image.asset(
-                          "assets/images/truck.png", // your red DCM truck image
-                          fit: BoxFit.cover,
-                        ),
-                        Positioned(
-                          left: 40,
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
+                    const SizedBox(height: 8),
+                    const Text(
+                      "Raju Transport",
+                      style: TextStyle(
+                        fontFamily: "roboto",
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    const Text(
+                      "Distribute boxes to Customers",
+                      style: TextStyle(
+                        fontFamily: "roboto",
+                        fontSize: 14,
+                        color: Colors.white70,
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+
+                    // Sub Card (white overlay)
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Column(
+                        children: [
+                          const Text(
+                            "Reached Customers Locations",
+                            style: TextStyle(
+                              fontFamily: "roboto",
+                              fontSize: 14,
+                              color: Colors.white,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: const [
+                              Icon(
+                                Icons.access_time,
+                                color: Colors.white70,
+                                size: 16,
+                              ),
+                              SizedBox(width: 4),
                               Text(
-                                "Order: 500 boxes",
-                                style: const TextStyle(
+                                "09:42 pm",
+                                style: TextStyle(
                                   fontFamily: "roboto",
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w600,
-                                  color: Colors.white,
+                                  fontSize: 13,
+                                  color: Colors.white70,
                                 ),
                               ),
-                              const SizedBox(height: 6),
+                              SizedBox(width: 12),
+                              Icon(
+                                Icons.calendar_today,
+                                color: Colors.white70,
+                                size: 16,
+                              ),
+                              SizedBox(width: 4),
                               Text(
-                                "Extra: 300 boxes",
-                                style: const TextStyle(
+                                "08 Jul 2025",
+                                style: TextStyle(
                                   fontFamily: "roboto",
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w600,
-                                  color: Colors.white,
+                                  fontSize: 13,
+                                  color: Colors.white70,
                                 ),
                               ),
                             ],
                           ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+
+                    // Order & Extra Boxes
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      children: const [
+                        Column(
+                          children: [
+                            Text(
+                              "Order Boxes",
+                              style: TextStyle(
+                                fontFamily: "roboto",
+                                fontSize: 14,
+                                color: Colors.white,
+                              ),
+                            ),
+                            SizedBox(height: 6),
+                            Text(
+                              "250",
+                              style: TextStyle(
+                                fontFamily: "roboto",
+                                fontSize: 20,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ],
+                        ),
+                        Column(
+                          children: [
+                            Text(
+                              "Extra Boxes",
+                              style: TextStyle(
+                                fontFamily: "roboto",
+                                fontSize: 14,
+                                color: Colors.white,
+                              ),
+                            ),
+                            SizedBox(height: 6),
+                            Text(
+                              "100",
+                              style: TextStyle(
+                                fontFamily: "roboto",
+                                fontSize: 20,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ],
                         ),
                       ],
                     ),
-                    const SizedBox(height: 12),
-                    // Row(
-                    //   mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    //   children: [
-                    //     const Text(
-                    //       "AP 26BX 5295",
-                    //       style: TextStyle(
-                    //         fontFamily: "roboto",
-                    //         fontSize: 15,
-                    //         fontWeight: FontWeight.w500,
-                    //       ),
-                    //     ),
-                    //     ElevatedButton(
-                    //       onPressed: () {},
-                    //       style: ElevatedButton.styleFrom(
-                    //         backgroundColor: Colors.red,
-                    //         shape: RoundedRectangleBorder(
-                    //           borderRadius: BorderRadius.circular(8),
-                    //         ),
-                    //         padding: const EdgeInsets.symmetric(
-                    //           vertical: 10,
-                    //           horizontal: 16,
-                    //         ),
-                    //       ),
-                    //       child: const Text(
-                    //         "View Details",
-                    //         style: TextStyle(
-                    //           fontFamily: "roboto",
-                    //           fontSize: 14,
-                    //         ),
-                    //       ),
-                    //     ),
-                    //   ],
-                    // ),
                   ],
                 ),
               ),
@@ -180,52 +221,43 @@ class HomeScreen extends StatelessWidget {
               ),
             ),
 
-            // Target Location List
+            // Locations List
             SliverList(
               delegate: SliverChildListDelegate([
                 _locationCard(
                   index: 1,
-                  city: "Tirupati",
-                  km: 580,
-                  orderBoxes: 250,
-                  extraBoxes: 100,
+                  name: "Ramesh Kumar",
+                  km: 50,
+                  orderBoxes: 120,
+                  extraBoxes: 10,
                   status: "Unloading",
                   context: context,
                 ),
                 _locationCard(
                   index: 2,
-                  city: "Nellore",
-                  km: 500,
-                  orderBoxes: 250,
-                  extraBoxes: 100,
+                  name: "Lakshmi Stores",
+                  km: 40,
+                  orderBoxes: 50,
+                  extraBoxes: 10,
                   status: "In Transit",
                   context: context,
                 ),
                 _locationCard(
                   index: 3,
-                  city: "Vijayawada",
-                  km: 500,
-                  orderBoxes: 250,
-                  extraBoxes: 100,
+                  name: "Venkatesh Traders",
+                  km: 20,
+                  orderBoxes: 76,
+                  extraBoxes: 24,
                   status: "Handover Started",
                   context: context,
                 ),
                 _locationCard(
                   index: 4,
-                  city: "Ongole",
-                  km: 500,
-                  orderBoxes: 250,
-                  extraBoxes: 100,
+                  name: "Sita General Store",
+                  km: 20,
+                  orderBoxes: 50,
+                  extraBoxes: 10,
                   status: "Delivery Completed",
-                  context: context,
-                ),
-                _locationCard(
-                  index: 5,
-                  city: "Kadapa",
-                  km: 500,
-                  orderBoxes: 250,
-                  extraBoxes: 100,
-                  status: "Ready for Dispatch",
                   context: context,
                 ),
               ]),
@@ -238,7 +270,7 @@ class HomeScreen extends StatelessWidget {
 
   Widget _locationCard({
     required int index,
-    required String city,
+    required String name,
     required int km,
     required int orderBoxes,
     required int extraBoxes,
@@ -276,7 +308,7 @@ class HomeScreen extends StatelessWidget {
               const SizedBox(height: 8),
               CircleAvatar(
                 radius: 14,
-                backgroundColor: Colors.red,
+                backgroundColor: Colors.red.shade200,
                 child: Text(
                   "$index",
                   style: const TextStyle(
@@ -296,7 +328,7 @@ class HomeScreen extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  city,
+                  name,
                   style: const TextStyle(
                     fontFamily: "roboto",
                     fontSize: 16,
@@ -322,7 +354,7 @@ class HomeScreen extends StatelessWidget {
             ),
           ),
 
-          // Right side boxes + button
+          // Right side
           Column(
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
@@ -342,7 +374,7 @@ class HomeScreen extends StatelessWidget {
               const SizedBox(height: 10),
               ElevatedButton.icon(
                 onPressed: () {
-                  context.push("/distribute_locations");
+                  context.push("/delivery_by_locations");
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.red,
