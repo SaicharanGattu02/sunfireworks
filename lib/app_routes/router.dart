@@ -1,11 +1,14 @@
+import 'dart:io';
 import 'dart:ui';
 import 'package:flutter/animation.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:sunfireworks/Presentation/DriverProfileScreen.dart';
+import 'package:sunfireworks/Presentation/TipperDriver/HomeScreen.dart';
 import '../Presentation/Authentication/Otp.dart';
 import '../Presentation/Authentication/SignInWithMobile.dart';
-import '../Presentation/SplashScreen.dart';
+import '../Presentation/TipperDriver/OrdersScreen.dart';
 
 final GoRouter appRouter = GoRouter(
   initialLocation: '/',
@@ -13,7 +16,7 @@ final GoRouter appRouter = GoRouter(
     GoRoute(
       path: '/',
       pageBuilder: (context, state) =>
-          buildSlideTransitionPage(Splashscreen(), state),
+          buildSlideTransitionPage(HomeScreen(), state),
     ),
     GoRoute(
       path: '/sign_in_with_mobile',
@@ -27,14 +30,32 @@ final GoRouter appRouter = GoRouter(
         return buildSlideTransitionPage(Otp(), state);
       },
     ),
+    GoRoute(
+      path: '/profile',
+      pageBuilder: (context, state) {
+        return buildSlideTransitionPage(DriverProfileScreen(), state);
+      },
+    ),
+    GoRoute(
+      path: '/orders',
+      pageBuilder: (context, state) {
+        return buildSlideTransitionPage(OrdersScreen(), state);
+      },
+    ),
+    GoRoute(
+      path: '/home',
+      pageBuilder: (context, state) {
+        return buildSlideTransitionPage(HomeScreen(), state);
+      },
+    ),
   ],
 );
 
 Page<dynamic> buildSlideTransitionPage(Widget child, GoRouterState state) {
-  // if (Platform.isIOS) {
-  //   // Use default Cupertino transition on iOS
-  //   return CupertinoPage(key: state.pageKey, child: child);
-  // }
+  if (Platform.isIOS) {
+    // Use default Cupertino transition on iOS
+    return CupertinoPage(key: state.pageKey, child: child);
+  }
 
   return CustomTransitionPage(
     key: state.pageKey,
