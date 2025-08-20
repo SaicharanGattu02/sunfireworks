@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:sunfireworks/services/AuthService.dart';
 
 class Splashscreen extends StatefulWidget {
   const Splashscreen({super.key});
@@ -12,8 +13,14 @@ class _SplashscreenState extends State<Splashscreen> {
   @override
   void initState() {
     super.initState();
-    Future.delayed(Duration(seconds: 2), () {
-      context.pushReplacement("/sign_in_with_mobile");
+    Future.delayed(Duration(seconds: 2), () async {
+      final access_token = await AuthService.getAccessToken();
+      if(access_token!=null){
+        context.pushReplacement("/dashboard");
+      }else{
+        context.pushReplacement("/sign_in_with_mobile");
+      }
+
     });
   }
 

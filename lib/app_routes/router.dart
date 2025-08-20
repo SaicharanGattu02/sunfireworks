@@ -10,6 +10,7 @@ import 'package:sunfireworks/Presentation/TipperDriver/DelivaryDetailsScreen.dar
 import 'package:sunfireworks/Presentation/TipperDriver/HomeScreen.dart';
 import '../Presentation/Authentication/Otp.dart';
 import '../Presentation/Authentication/SignInWithMobile.dart';
+import '../Presentation/SplashScreen.dart';
 import '../Presentation/TipperDriver/DistributeLocationsScreen.dart';
 
 import '../Presentation/TipperDriver/DeliveryByLocationsScreen.dart';
@@ -21,7 +22,7 @@ final GoRouter appRouter = GoRouter(
     GoRoute(
       path: '/',
       pageBuilder: (context, state) =>
-          buildSlideTransitionPage(Dashboard(), state),
+          buildSlideTransitionPage(Splashscreen(), state),
     ),
     GoRoute(
       path: '/sign_in_with_mobile',
@@ -32,7 +33,8 @@ final GoRouter appRouter = GoRouter(
     GoRoute(
       path: '/otp',
       pageBuilder: (context, state) {
-        return buildSlideTransitionPage(Otp(), state);
+        final mobile_number = state.uri.queryParameters['mobile_number'] ?? "";
+        return buildSlideTransitionPage(Otp(mobile_number: mobile_number,), state);
       },
     ),
     GoRoute(
@@ -45,6 +47,12 @@ final GoRouter appRouter = GoRouter(
       path: '/orders',
       pageBuilder: (context, state) {
         return buildSlideTransitionPage(OrdersScreen(), state);
+      },
+    ),
+    GoRoute(
+      path: '/dashboard',
+      pageBuilder: (context, state) {
+        return buildSlideTransitionPage(Dashboard(), state);
       },
     ),
     GoRoute(

@@ -43,7 +43,48 @@ class MyApp extends StatelessWidget {
             cardColor: Colors.white,
             searchBarTheme: const SearchBarThemeData(),
             tabBarTheme: const TabBarThemeData(),
-            inputDecorationTheme: InputDecorationTheme(),
+            inputDecorationTheme: InputDecorationTheme(
+              hintStyle: const TextStyle(
+                color: Colors.black,
+                fontFamily: "Poppins",
+                fontSize: 14,
+                fontWeight: FontWeight.w400,
+              ),
+              labelStyle: const TextStyle(
+                color: Colors.black,
+                fontFamily: "Poppins",
+                fontWeight: FontWeight.w500,
+                fontSize: 16,
+              ),
+              filled: true,
+              fillColor: Colors.white,
+              contentPadding: EdgeInsets.symmetric(
+                horizontal: 16,
+                vertical: 14,
+              ),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+                borderSide: BorderSide.none,
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+                borderSide: BorderSide(color: Colors.grey)
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+              errorBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+              focusedErrorBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+              errorStyle: TextStyle(
+                fontWeight: FontWeight.w400,
+                fontSize: 13,
+                color: Colors.red,
+              ),
+            ),
             dialogTheme: const DialogThemeData(
               shadowColor: Colors.white,
               surfaceTintColor: Colors.white,

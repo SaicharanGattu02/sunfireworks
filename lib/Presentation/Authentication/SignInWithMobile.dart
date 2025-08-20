@@ -1,9 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:sunfireworks/Components/CustomAppButton.dart';
+import 'package:sunfireworks/Components/CustomSnackBar.dart';
+import 'package:sunfireworks/data/bloc/cubits/Auth/auth_cubit.dart';
+import 'package:sunfireworks/data/bloc/cubits/Auth/auth_state.dart';
 import 'package:sunfireworks/utils/media_query_helper.dart';
 import 'package:sunfireworks/widgets/CommonTextField.dart';
-import '../../theme/ThemeHelper.dart';
 
 class SignInWithMobile extends StatefulWidget {
   const SignInWithMobile({super.key});
@@ -14,13 +18,11 @@ class SignInWithMobile extends StatefulWidget {
 
 class _SignInWithMobileState extends State<SignInWithMobile> {
   final _formKey = GlobalKey<FormState>();
-
   final TextEditingController _vehicleController = TextEditingController();
   final TextEditingController _mobileController = TextEditingController();
 
   @override
   Widget build(BuildContext context) {
-    final isDarkMode = ThemeHelper.isDarkMode(context);
     return Scaffold(
       backgroundColor: Colors.white,
       body: Stack(
@@ -48,18 +50,18 @@ class _SignInWithMobileState extends State<SignInWithMobile> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    CommonTextField1(
-                      lable: "Vehicle Number",
-                      hint: "Enter vehicle number",
-                      color: Colors.white,
-                      controller: _vehicleController,
-                      validator: (val) {
-                        if (val == null || val.trim().isEmpty) {
-                          return "Vehicle number is required";
-                        }
-                        return null;
-                      },
-                    ),
+                    // CommonTextField1(
+                    //   lable: "Vehicle Number",
+                    //   hint: "Enter vehicle number",
+                    //   color: Colors.white,
+                    //   controller: _vehicleController,
+                    //   validator: (val) {
+                    //     if (val == null || val.trim().isEmpty) {
+                    //       return "Vehicle number is required";
+                    //     }
+                    //     return null;
+                    //   },
+                    // ),
                     const SizedBox(height: 16),
                     CommonTextField1(
                       lable: "Mobile Number",
@@ -67,6 +69,7 @@ class _SignInWithMobileState extends State<SignInWithMobile> {
                       color: Colors.white,
                       keyboardType: TextInputType.phone,
                       controller: _mobileController,
+                      inputFormatters: [LengthLimitingTextInputFormatter(10)],
                       validator: (val) {
                         if (val == null || val.trim().isEmpty) {
                           return "Mobile number is required";
@@ -86,16 +89,31 @@ class _SignInWithMobileState extends State<SignInWithMobile> {
       bottomNavigationBar: SafeArea(
         child: Padding(
           padding: const EdgeInsets.fromLTRB(16, 0, 16, 50),
-          child: CustomAppButton1(
-            text: 'Send OTP',
-            onPlusTap: () {
-              if (_formKey.currentState?.validate() ?? false) {
-                context.pushReplacement("/otp");
-              } else {
-                print("Validation failed");
+          child: BlocConsumer<AuthCubit, AuthStates>(
+            listener: (context, state) {
+              if (state is AuthGenerateOTP) {
+                context.push("/otp?mobile_number=${_mobileController.text}");
+              } else if (state is AuthFailure) {
+                CustomSnackBar1.show(context, state.message);
               }
             },
-
+            builder: (context, state) {
+              final isLoading = state is AuthLoading;
+              return CustomAppButton1(
+                isLoading: isLoading,
+                text: 'Send OTP',
+                onPlusTap: () {
+                  if (_formKey.currentState?.validate() ?? false) {
+                    Map<String, dynamic> data = {
+                      "mobile": _mobileController.text,
+                    };
+                    context.read<AuthCubit>().getOTP(data);
+                  } else {
+                    print("Validation failed");
+                  }
+                },
+              );
+            },
           ),
         ),
       ),

@@ -1,13 +1,18 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 import 'package:pin_code_fields/pin_code_fields.dart';
 import 'package:sunfireworks/Components/CustomAppButton.dart';
+import 'package:sunfireworks/services/AuthService.dart';
 import 'package:sunfireworks/utils/media_query_helper.dart';
+import '../../Components/CustomSnackBar.dart';
 import '../../Components/ShakeWidget.dart';
-import '../../theme/AppTextStyles.dart';
-import '../../theme/ThemeHelper.dart';
+import '../../data/bloc/cubits/Auth/auth_cubit.dart';
+import '../../data/bloc/cubits/Auth/auth_state.dart';
 
 class Otp extends StatefulWidget {
-  const Otp({super.key});
+  final String mobile_number;
+  const Otp({super.key,required this.mobile_number});
 
   @override
   State<Otp> createState() => _OtpState();
@@ -20,7 +25,6 @@ class _OtpState extends State<Otp> {
 
   @override
   Widget build(BuildContext context) {
-    final textColor = ThemeHelper.textColor(context);
     return Scaffold(
       backgroundColor: Colors.white,
       body: Stack(
@@ -45,31 +49,26 @@ class _OtpState extends State<Otp> {
               child: Form(
                 key: _formKey,
                 child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Text(
                       "Verify Your Number",
-                      style: AppTextStyles.headlineSmall(
-                        textColor,
-                      ).copyWith(fontWeight: FontWeight.w600),
+                      style: TextStyle(
+                        fontSize: 20,
+                      ),
                     ),
                     const SizedBox(height: 18),
                     Align(
                       alignment: Alignment.topLeft,
                       child: Text(
                         "Enter OTP",
-                        style: AppTextStyles.titleLarge(textColor).copyWith(
-                          fontWeight: FontWeight.w500,
-                          color: Color(0xffBDBDBD),
-                        ),
                       ),
                     ),
-
                     const SizedBox(height: 16),
                     PinCodeTextField(
                       appContext: context,
-                      length: 4,
+                      length: 6,
                       controller: otpController,
                       autoFocus: true,
                       keyboardType: TextInputType.number,
@@ -77,9 +76,6 @@ class _OtpState extends State<Otp> {
                       animationDuration: const Duration(milliseconds: 300),
                       backgroundColor: Colors.transparent,
                       enableActiveFill: true,
-                      textStyle: AppTextStyles.headlineSmall(
-                        textColor,
-                      ).copyWith(fontWeight: FontWeight.w600),
                       onChanged: (_) {
                         setState(() {
                           _showOtpError = false;
@@ -88,8 +84,8 @@ class _OtpState extends State<Otp> {
                       pinTheme: PinTheme(
                         shape: PinCodeFieldShape.box,
                         borderRadius: BorderRadius.circular(8),
-                        fieldHeight: 60,
-                        fieldWidth: 60,
+                        fieldHeight: 50,
+                        fieldWidth: 50,
                         activeColor: Color(0xffE9E9E9),
                         inactiveColor: Color(0xffE9E9E9),
                         selectedColor: Color(0xffE9E9E9),
@@ -128,23 +124,44 @@ class _OtpState extends State<Otp> {
       bottomNavigationBar: SafeArea(
         child: Padding(
           padding: const EdgeInsets.fromLTRB(16, 0, 16, 50),
-          child: CustomAppButton1(
-            text: 'Next',
-            onPlusTap: () {
-              if (_formKey.currentState?.validate() ?? false) {
-                if (otpController.text.trim().length != 6) {
-                  setState(() {
-                    _showOtpError = true;
-                  });
-                } else {
-                  setState(() {
-                    _showOtpError = false;
-                  });
-
-                  print("OTP Verified: ${otpController.text}");
+          child: BlocConsumer<AuthCubit, AuthStates>(
+              listener: (context, state) {
+                if (state is AuthVerifyOTP) {
+                  final data = state.verifyOTPModel.data;
+                  AuthService.saveTokens(data?.accessToken??"", data?.refreshToken??"", 0);
+                  context.push("/home");
+                } else if (state is AuthFailure) {
+                  CustomSnackBar1.show(context, state.message);
                 }
+              },
+              builder: (context, state) {
+                final isLoading = state is AuthLoading;
+                return CustomAppButton1(
+                  text: 'Next',
+                  isLoading: isLoading,
+                  onPlusTap: () {
+                    if (_formKey.currentState?.validate() ?? false) {
+                      if (otpController.text.trim().length != 6) {
+                        setState(() {
+                          _showOtpError = true;
+                        });
+                      } else {
+                        setState(() {
+                          _showOtpError = false;
+                        });
+
+                        Map<String, dynamic> data = {
+                          "mobile": widget.mobile_number,
+                          "otp": otpController.text,
+                          "fcm_token": 'kgiergkrgngkjsegnlksdjgn',
+                          "token_type": "android_token",
+                        };
+                        context.read<AuthCubit>().verifyOTP(data);
+                      }
+                    }
+                  },
+                );
               }
-            },
           ),
         ),
       ),
