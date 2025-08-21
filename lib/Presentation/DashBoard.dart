@@ -6,9 +6,12 @@ import 'package:sunfireworks/Presentation/DriverProfileScreen.dart';
 import 'package:sunfireworks/Presentation/TipperDriver/HomeScreen.dart';
 import 'package:sunfireworks/Presentation/TipperDriver/OrdersScreen.dart';
 import 'package:sunfireworks/data/bloc/cubits/MiniTruckDriver/SaveMiniTruckLocation/save_minitruck_location_cubit.dart';
+import 'package:sunfireworks/services/AuthService.dart';
 import 'package:sunfireworks/utils/AppLogger.dart';
 import '../data/bloc/internet_status/internet_status_bloc.dart';
 import '../services/location_channel.dart';
+import 'MiniTruckDriver/CustomerLocations.dart';
+import 'MiniTruckDriver/CustomerDeliveryScreen.dart';
 
 class Dashboard extends StatefulWidget {
   final int initialTab;
@@ -21,43 +24,24 @@ class Dashboard extends StatefulWidget {
 class _DashboardState extends State<Dashboard> {
   late PageController pageController;
   int _selectedIndex = 0;
-  String _currentLocation = "Waiting for location...";
-
+  static const platform = MethodChannel('com.sunfireworks/location');
   @override
   void initState() {
     super.initState();
     _selectedIndex = widget.initialTab;
     pageController = PageController(initialPage: _selectedIndex);
-  }
-  //
-  // Future<void> _initLocationUpdates() async {
-  //   final bool hasPermissions = await LocationBridge.ensurePermissions();
-  //   if (hasPermissions) {
-  //     await LocationBridge.startListeningToLocationUpdates((latitude, longitude, address) {
-  //       setState(() {
-  //         _currentLocation = "Lat: $latitude, Lon: $longitude, Address: $address";
-  //       });
-  //       print("Received Location Update: Latitude: $latitude, Longitude: $longitude, Address: $address");
-  //     });
-  //     await LocationBridge.startService(message: 'Tracking location...');
-  //   } else {
-  //     setState(() {
-  //       _currentLocation = "Location permissions not granted.";
-  //     });
-  //     print("Permission not granted. Cannot start location service.");
-  //   }
-  //   // Explicitly complete the Future<void>
-  //   return;
-  // }
-
-  Future<void> _stop() async {
-    print("Dashboard: Stopping location service");
-    await LocationBridge.stopService();
-    setState(() {
-      _currentLocation = "Location service stopped.";
-    });
+    _startLocationService();
   }
 
+  void _startLocationService() async {
+    try {
+      await platform.invokeMethod('startService', {
+        'message': 'Location Service Started',
+      });
+    } on PlatformException catch (e) {
+      print("Failed to start service: '${e.message}'.");
+    }
+  }
 
   void onItemTapped(int selectedItems) {
     pageController.jumpToPage(selectedItems);
@@ -68,42 +52,55 @@ class _DashboardState extends State<Dashboard> {
 
   @override
   Widget build(BuildContext context) {
-    return WillPopScope(
-      onWillPop: () async {
-        if (_selectedIndex != 0) {
-          setState(() {
-            _selectedIndex = 0;
-          });
-          pageController.jumpToPage(0);
-          return false; // Prevent app from exiting
-        } else {
-          SystemNavigator.pop(); // Exit app
-          return true;
-        }
-      },
-      child: Scaffold(
-        body: BlocListener<InternetStatusBloc, InternetStatusState>(
-          listener: (context, state) {
-            if (state is InternetStatusLostState) {
-              context.push('/no_internet');
-            } else if (state is InternetStatusBackState) {
-              context.pop();
+    return FutureBuilder(
+      future: AuthService.getRole(),
+      builder: (context, asyncSnapshot) {
+        final role = asyncSnapshot.data ?? "";
+        AppLogger.info("role: ${role}");
+        return WillPopScope(
+          onWillPop: () async {
+            if (_selectedIndex != 0) {
+              setState(() {
+                _selectedIndex = 0;
+              });
+              pageController.jumpToPage(0);
+              return false; // Prevent app from exiting
+            } else {
+              SystemNavigator.pop(); // Exit app
+              return true;
             }
           },
-          child: PageView(
-            onPageChanged: (value) {
-              HapticFeedback.lightImpact();
-              setState(() {
-                _selectedIndex = value;
-              });
-            },
-            controller: pageController,
-            children: [HomeScreen(), OrdersScreen(), DriverProfileScreen()],
-            physics: const NeverScrollableScrollPhysics(),
+          child: Scaffold(
+            body: BlocListener<InternetStatusBloc, InternetStatusState>(
+              listener: (context, state) {
+                if (state is InternetStatusLostState) {
+                  context.push('/no_internet');
+                } else if (state is InternetStatusBackState) {
+                  context.pop();
+                }
+              },
+              child: PageView(
+                onPageChanged: (value) {
+                  HapticFeedback.lightImpact();
+                  setState(() {
+                    _selectedIndex = value;
+                  });
+                },
+                controller: pageController,
+                children: [
+                  role == "dcm_driver"
+                      ? HomeScreen()
+                      : CustomerLocations(),
+                  OrdersScreen(),
+                  DriverProfileScreen(),
+                ],
+                physics: const NeverScrollableScrollPhysics(),
+              ),
+            ),
+            bottomNavigationBar: _buildBottomNavigationBar(),
           ),
-        ),
-        bottomNavigationBar: _buildBottomNavigationBar(),
-      ),
+        );
+      },
     );
   }
 

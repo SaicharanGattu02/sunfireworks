@@ -31,8 +31,8 @@ class Data {
   String? id;
   String? orderId;
   String? location;
-  Null? distance;
-  Null? duration;
+  dynamic? distance;
+  dynamic? duration;
   CustomerDetails? customerDetails;
   String? totalAmount;
 

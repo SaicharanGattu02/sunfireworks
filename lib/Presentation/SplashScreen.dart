@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:sunfireworks/services/AuthService.dart';
+import 'package:sunfireworks/utils/AppLogger.dart';
 
 class Splashscreen extends StatefulWidget {
   const Splashscreen({super.key});
@@ -15,6 +16,7 @@ class _SplashscreenState extends State<Splashscreen> {
     super.initState();
     Future.delayed(Duration(seconds: 2), () async {
       final access_token = await AuthService.getAccessToken();
+      AppLogger.info("access_token:${access_token}");
       if(access_token!=null){
         context.pushReplacement("/dashboard");
       }else{

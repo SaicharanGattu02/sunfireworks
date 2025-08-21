@@ -6,7 +6,6 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:http/http.dart' as http;
 
-
 class DeliveryMapScreen extends StatefulWidget {
   const DeliveryMapScreen({super.key});
 
@@ -137,7 +136,7 @@ class _DeliveryMapScreenState extends State<DeliveryMapScreen> {
 
     _positionStream =
         Geolocator.getPositionStream(locationSettings: locationSettings).listen(
-              (Position position) async {
+          (Position position) async {
             _currentPosition = position;
             final GoogleMapController controller = await _controller.future;
             controller.animateCamera(
@@ -181,9 +180,9 @@ class _DeliveryMapScreenState extends State<DeliveryMapScreen> {
             initialCameraPosition: CameraPosition(
               target: _currentPosition != null
                   ? LatLng(
-                _currentPosition!.latitude,
-                _currentPosition!.longitude,
-              )
+                      _currentPosition!.latitude,
+                      _currentPosition!.longitude,
+                    )
                   : _destination,
               zoom: 14,
             ),

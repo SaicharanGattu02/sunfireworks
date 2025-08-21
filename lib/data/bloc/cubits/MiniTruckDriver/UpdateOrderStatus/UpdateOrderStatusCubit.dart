@@ -8,12 +8,12 @@ class UpdateOrderStatusCubit extends Cubit<UpdateOrderStatusStates> {
   UpdateOrderStatusCubit(this.updateOrderStatusRepo)
     : super(UpdateOrderStatusInitially());
 
-  Future<void> updateOrderStatus(String orderId, String status) async {
+  Future<void> updateOrderStatus(String orderId,Map<String, dynamic> data) async {
     try {
       emit(UpdateOrderStatusLoading());
       final successModel = await updateOrderStatusRepo.updateOrderStatus(
         orderId,
-        status,
+        data,
       );
       if (successModel != null && successModel.success == true) {
         emit(UpdateOrderStatusUpdated(successModel));

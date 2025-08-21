@@ -5,6 +5,7 @@ import 'package:pin_code_fields/pin_code_fields.dart';
 import 'package:sunfireworks/Components/CustomAppButton.dart';
 import 'package:sunfireworks/services/AuthService.dart';
 import 'package:sunfireworks/utils/media_query_helper.dart';
+import 'package:sunfireworks/utils/preferences.dart';
 import '../../Components/CustomSnackBar.dart';
 import '../../Components/ShakeWidget.dart';
 import '../../data/bloc/cubits/Auth/auth_cubit.dart';
@@ -12,7 +13,7 @@ import '../../data/bloc/cubits/Auth/auth_state.dart';
 
 class Otp extends StatefulWidget {
   final String mobile_number;
-  const Otp({super.key,required this.mobile_number});
+  const Otp({super.key, required this.mobile_number});
 
   @override
   State<Otp> createState() => _OtpState();
@@ -52,18 +53,11 @@ class _OtpState extends State<Otp> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Text(
-                      "Verify Your Number",
-                      style: TextStyle(
-                        fontSize: 20,
-                      ),
-                    ),
+                    Text("Verify Your Number", style: TextStyle(fontSize: 20)),
                     const SizedBox(height: 18),
                     Align(
                       alignment: Alignment.topLeft,
-                      child: Text(
-                        "Enter OTP",
-                      ),
+                      child: Text("Enter OTP"),
                     ),
                     const SizedBox(height: 16),
                     PinCodeTextField(
@@ -125,43 +119,50 @@ class _OtpState extends State<Otp> {
         child: Padding(
           padding: const EdgeInsets.fromLTRB(16, 0, 16, 50),
           child: BlocConsumer<AuthCubit, AuthStates>(
-              listener: (context, state) {
-                if (state is AuthVerifyOTP) {
-                  final data = state.verifyOTPModel.data;
-                  AuthService.saveTokens(data?.accessToken??"", data?.refreshToken??"", 0);
-                  context.push("/home");
-                } else if (state is AuthFailure) {
-                  CustomSnackBar1.show(context, state.message);
-                }
-              },
-              builder: (context, state) {
-                final isLoading = state is AuthLoading;
-                return CustomAppButton1(
-                  text: 'Next',
-                  isLoading: isLoading,
-                  onPlusTap: () {
-                    if (_formKey.currentState?.validate() ?? false) {
-                      if (otpController.text.trim().length != 6) {
-                        setState(() {
-                          _showOtpError = true;
-                        });
-                      } else {
-                        setState(() {
-                          _showOtpError = false;
-                        });
-
-                        Map<String, dynamic> data = {
-                          "mobile": widget.mobile_number,
-                          "otp": otpController.text,
-                          "fcm_token": 'kgiergkrgngkjsegnlksdjgn',
-                          "token_type": "android_token",
-                        };
-                        context.read<AuthCubit>().verifyOTP(data);
-                      }
-                    }
-                  },
+            listener: (context, state) async {
+              if (state is AuthVerifyOTP) {
+                final data = state.verifyOTPModel.data;
+                await AuthService.saveTokens(
+                  data?.accessToken ?? "",
+                  data?.refreshToken ?? "",
+                  data?.userRole ?? "",
+                  0,
                 );
+                PreferenceService().saveString("role", data?.userRole ?? "");
+                PreferenceService().saveString("access_token", data?.accessToken ?? "");
+                context.pushReplacement("/dashboard");
+              } else if (state is AuthFailure) {
+                CustomSnackBar1.show(context, state.message);
               }
+            },
+            builder: (context, state) {
+              final isLoading = state is AuthLoading;
+              return CustomAppButton1(
+                text: 'Next',
+                isLoading: isLoading,
+                onPlusTap: () {
+                  if (_formKey.currentState?.validate() ?? false) {
+                    if (otpController.text.trim().length != 6) {
+                      setState(() {
+                        _showOtpError = true;
+                      });
+                    } else {
+                      setState(() {
+                        _showOtpError = false;
+                      });
+
+                      Map<String, dynamic> data = {
+                        "mobile": widget.mobile_number,
+                        "otp": otpController.text,
+                        "fcm_token": 'kgiergkrgngkjsegnlksdjgn',
+                        "token_type": "android_token",
+                      };
+                      context.read<AuthCubit>().verifyOTP(data);
+                    }
+                  }
+                },
+              );
+            },
           ),
         ),
       ),

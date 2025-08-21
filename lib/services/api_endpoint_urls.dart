@@ -9,6 +9,7 @@ class APIEndpointUrls {
   static const String generate_otp = '${authUrl}mobile-otp/';
   static const String verify_otp = '${authUrl}verify-otp/';
   static const String forgot_password = '${authUrl}forgot-password/';
+  static const String user_detail = '${authUrl}user-detail/';
 
   /// driver Urls
   static const String dcm_polyline = '${driverUrl}dcm-polyline/';

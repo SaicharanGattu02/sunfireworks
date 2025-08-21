@@ -16,7 +16,7 @@ class AssignedOrdersCubit extends Cubit<AssignedOrdersStates> {
       emit(AssignedOrdersLoading());
       final assignedOrders = await assignedOrdersRepo.getAssignedOrders();
 
-      if (assignedOrders != null && assignedOrders.success == 1) {
+      if (assignedOrders != null && assignedOrders.success == true) {
         emit(AssignedOrdersLoaded(assignedOrders));
       } else {
         emit(AssignedOrdersFailure('No assigned orders available'));

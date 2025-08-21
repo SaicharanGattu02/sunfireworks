@@ -1,8 +1,30 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
+import 'package:sunfireworks/data/bloc/cubits/TipperDriver/DriverAssignment/driver_assignment_cubit.dart';
+
+import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
-class HomeScreen extends StatelessWidget {
+import '../../data/Models/TipperDriver/DriverAssignmentModel.dart';
+import '../../data/bloc/cubits/TipperDriver/DriverAssignment/driver_assignment_states.dart';
+import '../../data/bloc/cubits/UserDetails/UserDetailsCubit.dart';
+import '../../data/bloc/cubits/UserDetails/UserDetailsStates.dart';
+
+class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
+
+  @override
+  State<HomeScreen> createState() => _HomescreenState();
+}
+
+class _HomescreenState extends State<HomeScreen> {
+  @override
+  void initState() {
+    super.initState();
+    context.read<DriverAssignmentCubit>().getDriverAssignments();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -10,231 +32,309 @@ class HomeScreen extends StatelessWidget {
       backgroundColor: Colors.grey[50],
       body: Padding(
         padding: const EdgeInsets.only(bottom: 20.0),
-        child: CustomScrollView(
-          slivers: [
-            // AppBar
-            SliverAppBar(
-              pinned: true,
-              floating: false,
-              elevation: 0,
-              backgroundColor: Colors.white,
-              leading: IconButton(
-                icon: const Icon(Icons.person, color: Colors.black),
-                onPressed: () {},
+        child: BlocBuilder<DriverAssignmentCubit, DriverAssignmentStates>(
+          builder: (context, state) {
+            // ---- State unpacking ----
+            DriverAssignmentModel? model;
+            bool hasNext = false;
+            bool isFirstLoading = false;
+            bool isAppending = false;
+            String? error;
+
+            if (state is DriverAssignmentLoading) {
+              isFirstLoading = true;
+            } else if (state is DriverAssignmentLoaded) {
+              model = state.driverAssignmentModel;
+              hasNext = state.hasNextPage;
+            } else if (state is DriverAssignmentLoadingMore) {
+              model = state.driverAssignmentModel;
+              hasNext = state.hasNextPage;
+              isAppending = true;
+            } else if (state is DriverAssignmentFailure) {
+              error = state.error;
+            }
+
+            // ---- First load spinner ----
+            if (isFirstLoading) {
+              return NotificationListener<ScrollNotification>(
+                onNotification: _onScroll,
+                child: CustomScrollView(
+                  slivers: [
+                    _buildHeaderAppBar(),
+                    _buildTargetHeader(),
+                    const SliverFillRemaining(
+                      hasScrollBody: false,
+                      child: Center(child: CircularProgressIndicator()),
+                    ),
+                  ],
+                ),
+              );
+            }
+
+            // ---- Error UI ----
+            if (error != null) {
+              return NotificationListener<ScrollNotification>(
+                onNotification: _onScroll,
+                child: CustomScrollView(
+                  slivers: [
+                    _buildHeaderAppBar(),
+                    _buildTargetHeader(),
+                    SliverFillRemaining(
+                      hasScrollBody: false,
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Padding(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 24.0,
+                            ),
+                            child: Text(
+                              error!,
+                              textAlign: TextAlign.center,
+                              style: const TextStyle(color: Colors.red),
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          ElevatedButton(
+                            onPressed: () => context
+                                .read<DriverAssignmentCubit>()
+                                .getDriverAssignments(),
+                            child: const Text("Retry"),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            }
+
+            final results = model?.data?.results ?? const <Results>[];
+
+            // ---- Empty state ----
+            if (results.isEmpty) {
+              return NotificationListener<ScrollNotification>(
+                onNotification: _onScroll,
+                child: CustomScrollView(
+                  slivers: [
+                    _buildHeaderAppBar(),
+                    _buildTargetHeader(),
+                    const SliverFillRemaining(
+                      hasScrollBody: false,
+                      child: Center(child: Text("No assignments found.")),
+                    ),
+                  ],
+                ),
+              );
+            }
+
+            // ---- Main list with infinite scroll ----
+            return NotificationListener<ScrollNotification>(
+              onNotification: _onScroll,
+              child: CustomScrollView(
+                slivers: [
+                  _buildHeaderAppBar(),
+                  _buildTargetHeader(),
+
+                  // Live list from API
+                  SliverList.builder(
+                    itemCount: results.length + (hasNext ? 1 : 0),
+                    itemBuilder: (context, index) {
+                      if (index >= results.length) {
+                        // Tail loader when hasNext = true
+                        return const Padding(
+                          padding: EdgeInsets.symmetric(vertical: 16),
+                          child: Center(child: CircularProgressIndicator()),
+                        );
+                      }
+
+                      final r = results[index];
+
+                      // Compute UI values
+                      final city =
+                          r.wayPointName ?? (r.dcmAssignment?.warehouse ?? "—");
+
+                      final status = r.dcmAssignment?.status ?? "—";
+
+                      // KM (fake/estimated for UI since API doesn't provide direct km)
+                      final km = _estimateKm(r);
+
+                      // final orderBoxes = _calcOrderBoxes(r);
+                      // final extraBoxes = _calcExtraBoxes(r);
+
+                      return InkWell(
+                        onTap: () {
+                          context.push("/distribute_locations");
+                        },
+                        child: _locationCard(
+                          index: index + 1,
+                          city: city,
+                          km: km,
+                          orderBoxes: 0,
+                          extraBoxes: 0,
+                          status: status,
+                          context: context,
+                        ),
+                      );
+                    },
+                  ),
+
+                  if (isAppending)
+                    const SliverToBoxAdapter(child: SizedBox(height: 8)),
+                ],
               ),
-              centerTitle: true,
-              title: const Text(
-                "Sun Fireworks",
+            );
+          },
+        ),
+      ),
+    );
+  }
+
+  /// Pagination trigger on scroll
+  bool _onScroll(ScrollNotification notification) {
+    if (notification is ScrollEndNotification ||
+        notification is UserScrollNotification ||
+        notification is OverscrollNotification) {
+      final metrics = notification.metrics;
+      final isNearBottom = metrics.pixels >= (metrics.maxScrollExtent - 200);
+      if (isNearBottom) {
+        context.read<DriverAssignmentCubit>().fetchMoreDriverAssignments();
+      }
+    }
+    return false;
+  }
+
+  String _initials(String name) {
+    final parts = name
+        .trim()
+        .split(RegExp(r'\s+'))
+        .where((e) => e.isNotEmpty)
+        .toList();
+    if (parts.isEmpty) return '';
+    if (parts.length == 1)
+      return parts.first.characters.take(2).toString().toUpperCase();
+    return (parts.first.characters.take(1).toString() +
+            parts.last.characters.take(1).toString())
+        .toUpperCase();
+  }
+
+  // ======= Your Sliver AppBar & Header =======
+
+  SliverAppBar _buildHeaderAppBar() {
+    return SliverAppBar(
+      pinned: true,
+      floating: false,
+      elevation: 0,
+      backgroundColor: Colors.white,
+      centerTitle: false,
+      title: BlocBuilder<UserDetailsCubit, UserDetailsStates>(
+        builder: (context, state) {
+          String displayName = '—';
+          String? avatarUrl;
+
+          if (state is UserDetailsLoading) {
+            return Row(
+              children: [
+                const CircleAvatar(
+                  radius: 22,
+                  backgroundColor: Color(0xFFE9E9E9),
+                ),
+                const SizedBox(width: 12),
+                const Text(
+                  'CustomerLocations',
+                  style: TextStyle(fontWeight: FontWeight.w700),
+                ),
+              ],
+            );
+          }
+
+          if (state is UserDetailsLoaded &&
+              state.userDetailsModel.data != null) {
+            final d = state.userDetailsModel.data!;
+            displayName = d.fullName?.trim().isNotEmpty == true
+                ? d.fullName!.trim()
+                : '—';
+            avatarUrl = (d.image?.trim().isNotEmpty == true)
+                ? d.image!.trim()
+                : null;
+          }
+          // Fallback to initials if no URL
+          final hasAvatar = (avatarUrl != null && avatarUrl.isNotEmpty);
+          return Row(
+            children: [
+              CircleAvatar(
+                radius: 22,
+                backgroundColor: Colors.grey[200],
+                backgroundImage: hasAvatar ? NetworkImage(avatarUrl) : null,
+                child: hasAvatar
+                    ? null
+                    : Text(
+                        _initials(displayName),
+                        style: const TextStyle(fontWeight: FontWeight.w700),
+                      ),
+              ),
+              const SizedBox(width: 12),
+              Text(
+                displayName ?? "",
                 style: TextStyle(
-                  fontFamily: "roboto",
                   fontWeight: FontWeight.w600,
-                  fontSize: 18,
+                  fontSize: 16,
                   color: Colors.black,
                 ),
               ),
-              actions: [
-                // IconButton(
-                //   icon: const Icon(
-                //     Icons.notifications_none,
-                //     color: Colors.black,
-                //   ),
-                //   onPressed: () {},
-                // ),
-              ],
-            ),
+            ],
+          );
+        },
+      ),
+      actions: const [],
+    );
+  }
 
-            // Truck Card
-            SliverToBoxAdapter(
-              child: Container(
-                margin: const EdgeInsets.all(16),
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(16),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.grey.shade200,
-                      blurRadius: 6,
-                      offset: const Offset(0, 3),
-                    ),
-                  ],
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Truck Image with dynamic text
-                    Stack(
-                      alignment: Alignment.center,
-                      children: [
-                        Image.asset(
-                          "assets/images/truck.png", // your red DCM truck image
-                          fit: BoxFit.cover,
-                        ),
-                        Positioned(
-                          left: 40,
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                "Order: 500 boxes",
-                                style: const TextStyle(
-                                  fontFamily: "roboto",
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w600,
-                                  color: Colors.white,
-                                ),
-                              ),
-                              const SizedBox(height: 6),
-                              Text(
-                                "Extra: 300 boxes",
-                                style: const TextStyle(
-                                  fontFamily: "roboto",
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w600,
-                                  color: Colors.white,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 12),
-                    // Row(
-                    //   mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    //   children: [
-                    //     const Text(
-                    //       "AP 26BX 5295",
-                    //       style: TextStyle(
-                    //         fontFamily: "roboto",
-                    //         fontSize: 15,
-                    //         fontWeight: FontWeight.w500,
-                    //       ),
-                    //     ),
-                    //     ElevatedButton(
-                    //       onPressed: () {},
-                    //       style: ElevatedButton.styleFrom(
-                    //         backgroundColor: Colors.red,
-                    //         shape: RoundedRectangleBorder(
-                    //           borderRadius: BorderRadius.circular(8),
-                    //         ),
-                    //         padding: const EdgeInsets.symmetric(
-                    //           vertical: 10,
-                    //           horizontal: 16,
-                    //         ),
-                    //       ),
-                    //       child: const Text(
-                    //         "View Details",
-                    //         style: TextStyle(
-                    //           fontFamily: "roboto",
-                    //           fontSize: 14,
-                    //         ),
-                    //       ),
-                    //     ),
-                    //   ],
-                    // ),
-                  ],
-                ),
+  SliverToBoxAdapter _buildTargetHeader() {
+    return SliverToBoxAdapter(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        child: Row(
+          children: [
+            const Icon(Icons.location_on, color: Colors.red),
+            const SizedBox(width: 8),
+            const Text(
+              "Target Location",
+              style: TextStyle(
+                fontFamily: "roboto",
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
               ),
             ),
-
-            // Target Location Header
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 8,
-                ),
-                child: Row(
-                  children: [
-                    const Icon(Icons.location_on, color: Colors.red),
-                    const SizedBox(width: 8),
-                    const Text(
-                      "Target Location",
-                      style: TextStyle(
-                        fontFamily: "roboto",
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    const Spacer(),
-                    IconButton(
-                      icon: const Icon(Icons.refresh, size: 20),
-                      onPressed: () {},
-                    ),
-                    IconButton(
-                      icon: const Icon(Icons.filter_list, size: 20),
-                      onPressed: () {},
-                    ),
-                    const Text(
-                      "See All",
-                      style: TextStyle(
-                        fontFamily: "roboto",
-                        fontSize: 14,
-                        color: Colors.red,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-
-            // Target Location List
-            SliverList(
-              delegate: SliverChildListDelegate([
-                _locationCard(
-                  index: 1,
-                  city: "Tirupati",
-                  km: 580,
-                  orderBoxes: 250,
-                  extraBoxes: 100,
-                  status: "Unloading",
-                  context: context,
-                ),
-                _locationCard(
-                  index: 2,
-                  city: "Nellore",
-                  km: 500,
-                  orderBoxes: 250,
-                  extraBoxes: 100,
-                  status: "In Transit",
-                  context: context,
-                ),
-                _locationCard(
-                  index: 3,
-                  city: "Vijayawada",
-                  km: 500,
-                  orderBoxes: 250,
-                  extraBoxes: 100,
-                  status: "Handover Started",
-                  context: context,
-                ),
-                _locationCard(
-                  index: 4,
-                  city: "Ongole",
-                  km: 500,
-                  orderBoxes: 250,
-                  extraBoxes: 100,
-                  status: "Delivery Completed",
-                  context: context,
-                ),
-                _locationCard(
-                  index: 5,
-                  city: "Kadapa",
-                  km: 500,
-                  orderBoxes: 250,
-                  extraBoxes: 100,
-                  status: "Ready for Dispatch",
-                  context: context,
-                ),
-              ]),
-            ),
+            // const Spacer(),
+            // IconButton(
+            //   icon: const Icon(Icons.refresh, size: 20),
+            //   onPressed: () {
+            //     context.read<DriverAssignmentCubit>().getDriverAssignments();
+            //   },
+            // ),
+            // IconButton(
+            //   icon: const Icon(Icons.filter_list, size: 20),
+            //   onPressed: () {
+            //     // TODO: open filters if needed
+            //   },
+            // ),
+            // const Text(
+            //   "See All",
+            //   style: TextStyle(
+            //     fontFamily: "roboto",
+            //     fontSize: 14,
+            //     color: Colors.red,
+            //     fontWeight: FontWeight.w500,
+            //   ),
+            // ),
           ],
         ),
       ),
     );
   }
+
+  // ======= Card (unchanged visual from your code) =======
 
   Widget _locationCard({
     required int index,
@@ -311,10 +411,10 @@ class HomeScreen extends StatelessWidget {
                 const SizedBox(height: 6),
                 Text(
                   status,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontFamily: "roboto",
                     fontSize: 14,
-                    color: Colors.green,
+                    color: _statusColor(status),
                     fontWeight: FontWeight.w500,
                   ),
                 ),
@@ -365,5 +465,34 @@ class HomeScreen extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  // ======= Helpers to map API -> UI =======
+
+  // Rough “km” placeholder (API doesn’t provide; adjust with your own logic)
+  int _estimateKm(Results r) {
+    // You can parse r.wayPoint (WKT: "SRID=4326;POINT (lon lat)") to compute distance from source.
+    // For now, return a stable deterministic pseudo-value so UI looks consistent.
+    final base = (r.wayPointName ?? r.dcmAssignment?.warehouse ?? "x").length;
+    return 300 + (base * 7) % 250; // 300..550
+  }
+
+  int _calcExtraBoxes(Results r) {
+    // Count only “extra” arrays’ lengths (change if server intends item-counts)
+    final eBags = r.extraBags?.length ?? 0;
+    final eInd = r.extraIndividualItems?.length ?? 0;
+    final eCombos = r.extraComboItems?.length ?? 0;
+    return eBags + eInd + eCombos;
+  }
+
+  Color _statusColor(String status) {
+    final s = status.toLowerCase();
+    if (s.contains('pending')) return Colors.orange;
+    if (s.contains('transit')) return Colors.blue;
+    if (s.contains('handover')) return Colors.indigo;
+    if (s.contains('completed') || s.contains('delivered')) return Colors.green;
+    if (s.contains('ready')) return Colors.teal;
+    if (s.contains('unloading')) return Colors.purple;
+    return Colors.black54;
   }
 }

@@ -4,11 +4,17 @@ import retrofit2.http.*
 
 
 interface ApiInterface {
-
-    @POST("location-tracking") // Endpoint path relative to base URL
-    fun sendLocation(
+    @POST("driver/dcm-polyline/")
+    fun sendDCMLocation(
         @Header("Authorization") bearerToken: String,
-        @Body locationRequest: LocationReq
+        @Query("location") location: String
     ): Call<submitresponse>
 
+    @POST("driver/car-polyline/")
+    fun sendCARLocation(
+        @Header("Authorization") bearerToken: String,
+        @Query("location") location: String
+    ): Call<submitresponse>
 }
+
+

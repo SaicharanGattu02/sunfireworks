@@ -12,6 +12,9 @@ class ApiClient {
       connectTimeout: const Duration(seconds: 60),
       receiveTimeout: const Duration(seconds: 60),
       headers: {"Content-Type": "application/json"},
+      validateStatus: (status) {
+        return true;
+      },
     ),
   );
 
@@ -43,18 +46,18 @@ class ApiClient {
             if (isUnauthenticated) {
               return handler.next(options);
             }
-            // Check token expiration
-            final isExpired = await AuthService.isTokenExpired();
-            if (isExpired) {
-              await AuthService.logout();
-              return handler.reject(
-                DioException(
-                  requestOptions: options,
-                  error: 'Token expired, please log in again',
-                  type: DioExceptionType.cancel,
-                ),
-              );
-            }
+            // // Check token expiration
+            // final isExpired = await AuthService.isTokenExpired();
+            // if (isExpired) {
+            //   await AuthService.logout();
+            //   return handler.reject(
+            //     DioException(
+            //       requestOptions: options,
+            //       error: 'Token expired, please log in again',
+            //       type: DioExceptionType.cancel,
+            //     ),
+            //   );
+            // }
             // Get access token from storage
             final accessToken = await AuthService.getAccessToken();
             if (accessToken == null || accessToken.isEmpty) {

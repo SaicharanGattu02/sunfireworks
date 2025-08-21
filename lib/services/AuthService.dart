@@ -1,14 +1,14 @@
+import 'dart:developer' as AppLogger;
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:go_router/go_router.dart';
-import '../services/api_endpoint_urls.dart';
-import '../services/ApiClient.dart';
 import '../utils/constants.dart';
 
 class AuthService {
   static const String _accessTokenKey = "access_token";
   static const String _refreshTokenKey = "refresh_token";
   static const String _tokenExpiryKey = "token_expiry";
+  static const String _role = "role";
 
   static final FlutterSecureStorage _storage = const FlutterSecureStorage();
 
@@ -28,54 +28,45 @@ class AuthService {
     return await _storage.read(key: _refreshTokenKey);
   }
 
-  /// Check if token is expired
+  /// Get stored role
+  static Future<String?> getRole() async {
+    return await _storage.read(key: _role);
+  }
+
+
+
   static Future<bool> isTokenExpired() async {
     final expiryTimestampStr = await _storage.read(key: _tokenExpiryKey);
     if (expiryTimestampStr == null) {
-      debugPrint('No expiry timestamp found, considering token expired');
+      AppLogger.log('No expiry timestamp found, considering token expired');
       return true;
     }
 
     final expiryTimestamp = int.tryParse(expiryTimestampStr);
     if (expiryTimestamp == null) {
-      debugPrint('Invalid expiry timestamp format, considering token expired');
+      AppLogger.log('Invalid expiry timestamp, considering token expired');
       return true;
     }
 
-    final now =
-        DateTime.now().millisecondsSinceEpoch ~/
-        1000; // current time in seconds
-
+    final now = DateTime.now().millisecondsSinceEpoch;
     final isExpired = now >= expiryTimestamp;
 
-    debugPrint(
+    AppLogger.log(
       'Token expiry check: now=$now, expiry=$expiryTimestamp, isExpired=$isExpired',
     );
     return isExpired;
   }
 
-  // static Future<bool> isTokenExpired() async {
-  //   final expiryTimestamp = await _storage.read(key: _tokenExpiryKey);
-  //   if (expiryTimestamp == null) {
-  //     debugPrint('No expiry timestamp found, considering token expired');
-  //     return true;
-  //   }
-  //
-  //   final now = DateTime.now().millisecondsSinceEpoch ~/ 1000; // ✅ Convert to seconds
-  //   final isExpired = now >= expiryTimestamp;
-  //
-  //   debugPrint('Token expiry check: now=$now, expiry=$expiryTimestamp, isExpired=$isExpired');
-  //   return isExpired;
-  // }
-
   /// Save tokens and expiry time
   static Future<void> saveTokens(
     String accessToken,
     String? refreshToken,
+    String? role,
     int expiresIn,
   ) async {
     await _storage.write(key: _accessTokenKey, value: accessToken);
     await _storage.write(key: _refreshTokenKey, value: refreshToken ?? "");
+    await _storage.write(key: _role, value: role ?? "");
     await _storage.write(key: _tokenExpiryKey, value: expiresIn.toString());
     debugPrint('Tokens saved: accessToken=$accessToken, expiryTime=$expiresIn');
   }

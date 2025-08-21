@@ -8,8 +8,12 @@ class CustomerGenerateOtpLoading extends CustomerGenerateOtpStates {}
 
 class CustomerGenerateOtpGenerated extends CustomerGenerateOtpStates {
   final SuccessModel successModel;
-
   CustomerGenerateOtpGenerated(this.successModel);
+}
+
+class CustomerGenerateOtpVerified extends CustomerGenerateOtpStates {
+  final SuccessModel successModel;
+  CustomerGenerateOtpVerified(this.successModel);
 }
 
 class CustomerGenerateOtpFailure extends CustomerGenerateOtpStates {

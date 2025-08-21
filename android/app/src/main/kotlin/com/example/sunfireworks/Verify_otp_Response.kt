@@ -1,7 +1,7 @@
 package com.example.sunfireworks
 
 data class submitresponse(
-    val error: String,
+    val success: String,
     val message: String,
     val token: String
 )

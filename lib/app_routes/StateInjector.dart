@@ -7,17 +7,16 @@ import 'package:sunfireworks/data/bloc/cubits/MiniTruckDriver/AssignedOrdersDeta
 import 'package:sunfireworks/data/bloc/cubits/MiniTruckDriver/AssignedOrdersDetails/AssignedOrdersDetailsRepo.dart';
 import 'package:sunfireworks/data/bloc/cubits/MiniTruckDriver/CustomerGenerateOTP/CustomerGenerateOtpCubit.dart';
 import 'package:sunfireworks/data/bloc/cubits/MiniTruckDriver/CustomerGenerateOTP/CustomerGenerateOtpRepo.dart';
-import 'package:sunfireworks/data/bloc/cubits/MiniTruckDriver/CustomerVerifyOtp/CustomerVerifyOtpCubit.dart';
-import 'package:sunfireworks/data/bloc/cubits/MiniTruckDriver/CustomerVerifyOtp/CustomerVerifyOtpRepo.dart';
 import 'package:sunfireworks/data/bloc/cubits/MiniTruckDriver/UpdateOrderStatus/UpdateOrderStatusCubit.dart';
 import 'package:sunfireworks/data/bloc/cubits/MiniTruckDriver/UpdateOrderStatus/UpdateOrderStatusRepo.dart';
 import 'package:sunfireworks/data/bloc/cubits/TipperDriver/DriverAssignment/driver_assignment_cubit.dart';
 import 'package:sunfireworks/data/bloc/cubits/TipperDriver/DriverAssignment/driver_assignment_repo.dart';
-import 'package:sunfireworks/data/bloc/cubits/TipperDriver/DriverAssignment/driver_assignment_states.dart';
 import 'package:sunfireworks/data/bloc/cubits/TipperDriver/DriverDetails/DriverDetailsCubit.dart';
 import 'package:sunfireworks/data/bloc/cubits/TipperDriver/DriverDetails/DriverDetailsRepo.dart';
 import 'package:sunfireworks/data/bloc/cubits/TipperDriver/WayPointWiseBoxes/waypoint_wise_boxes_cubit.dart';
 import 'package:sunfireworks/data/bloc/cubits/TipperDriver/WayPointWiseBoxes/waypoint_wise_boxes_repo.dart';
+import 'package:sunfireworks/data/bloc/cubits/UserDetails/UserDetailsCubit.dart';
+import 'package:sunfireworks/data/bloc/cubits/UserDetails/UserDetailsRepo.dart';
 import '../data/bloc/internet_status/internet_status_bloc.dart';
 import '../data/remote_data_source.dart';
 
@@ -51,11 +50,6 @@ class StateInjector {
         remoteDataSource: context.read<RemoteDataSource>(),
       ),
     ),
-    RepositoryProvider<CustomerVerifyOtpRepo>(
-      create: (context) => CustomerVerifyOtpRepoImpl(
-        remoteDataSource: context.read<RemoteDataSource>(),
-      ),
-    ),
     RepositoryProvider<UpdateOrderStatusRepo>(
       create: (context) => UpdateOrderStatusRepoImpl(
         remoteDataSource: context.read<RemoteDataSource>(),
@@ -68,6 +62,11 @@ class StateInjector {
     ),
     RepositoryProvider<WaypointWiseBoxesRepo>(
       create: (context) => WaypointWiseBoxesRepoImpl(
+        remoteDataSource: context.read<RemoteDataSource>(),
+      ),
+    ),
+    RepositoryProvider<UserDetailsRepo>(
+      create: (context) => UserDetailsRepoImpl(
         remoteDataSource: context.read<RemoteDataSource>(),
       ),
     ),
@@ -91,9 +90,6 @@ class StateInjector {
     BlocProvider<CustomerGenerateOtpCubit>(
       create: (context) => CustomerGenerateOtpCubit(context.read<CustomerGenerateOtpRepo>()),
     ),
-    BlocProvider<CustomerVerifyOtpCubit>(
-      create: (context) => CustomerVerifyOtpCubit(context.read<CustomerVerifyOtpRepo>()),
-    ),
     BlocProvider<UpdateOrderStatusCubit>(
       create: (context) => UpdateOrderStatusCubit(context.read<UpdateOrderStatusRepo>()),
     ),
@@ -102,6 +98,9 @@ class StateInjector {
     ),
     BlocProvider<WaypointWiseBoxesCubit>(
       create: (context) => WaypointWiseBoxesCubit(context.read<WaypointWiseBoxesRepo>()),
+    ),
+    BlocProvider<UserDetailsCubit>(
+      create: (context) => UserDetailsCubit(context.read<UserDetailsRepo>()),
     ),
   ];
 }

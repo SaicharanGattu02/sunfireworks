@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:sunfireworks/Presentation/DashBoard.dart';
 import 'package:sunfireworks/Presentation/DriverProfileScreen.dart';
+import 'package:sunfireworks/Presentation/MiniTruckDriver/CustomerDeliveryScreen.dart';
 import 'package:sunfireworks/Presentation/TipperDriver/DelivaryDetailsScreen.dart';
 import 'package:sunfireworks/Presentation/TipperDriver/HomeScreen.dart';
 import '../Presentation/Authentication/Otp.dart';
@@ -13,7 +14,7 @@ import '../Presentation/Authentication/SignInWithMobile.dart';
 import '../Presentation/SplashScreen.dart';
 import '../Presentation/TipperDriver/DistributeLocationsScreen.dart';
 
-import '../Presentation/TipperDriver/DeliveryByLocationsScreen.dart';
+import '../Presentation/TipperDriver/MiniTruckDeliveryScreen.dart';
 import '../Presentation/TipperDriver/OrdersScreen.dart';
 
 final GoRouter appRouter = GoRouter(
@@ -74,9 +75,16 @@ final GoRouter appRouter = GoRouter(
       },
     ),
     GoRoute(
-      path: '/delivery_by_locations',
+      path: '/truck_delivery',
       pageBuilder: (context, state) {
-        return buildSlideTransitionPage(DeliveryByLocationsScreen(), state);
+        return buildSlideTransitionPage(MiniTruckDeliveryScreen(), state);
+      },
+    ),
+    GoRoute(
+      path: '/customer_delivery',
+      pageBuilder: (context, state) {
+        final order_id = state.uri.queryParameters['order_id'] ?? "";
+        return buildSlideTransitionPage(CustomerDeliveryScreen(order_id: order_id), state);
       },
     ),
   ],

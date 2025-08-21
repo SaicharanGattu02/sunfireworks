@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 
 import '../../utils/media_query_helper.dart';
 
-class DeliveryByLocationsScreen extends StatelessWidget {
-  const DeliveryByLocationsScreen({super.key});
+class MiniTruckDeliveryScreen extends StatelessWidget {
+  const MiniTruckDeliveryScreen({super.key});
 
   @override
   Widget build(BuildContext context) {

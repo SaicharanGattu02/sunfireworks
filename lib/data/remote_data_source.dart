@@ -9,20 +9,25 @@ import 'Models/SuccessModel.dart';
 import 'Models/TipperDriver/DriverAssignmentModel.dart';
 import 'Models/TipperDriver/DriverDetailsModel.dart';
 import 'Models/TipperDriver/WaypointWiseBoxesModel.dart';
+import 'Models/UserDetailsModel.dart';
 import 'Models/VerifyOTPModel.dart';
 
 abstract class RemoteDataSource {
   Future<GenerateOTPModel?> getOTP(Map<String, dynamic> data);
   Future<VerifyOTPModel?> verifyOTP(Map<String, dynamic> data);
+  Future<UserDetailsModel?> getUserDetails();
   Future<GenerateOTPModel?> forgotPassword(Map<String, dynamic> data);
   Future<SuccessModel?> saveTipperLocation(String location);
   Future<SuccessModel?> saveMiniTruckLocation(String location);
-  Future<DriverAssignmentModel?> getDriverAssignments();
+  Future<DriverAssignmentModel?> getDriverAssignments(int page);
   Future<WaypointWiseBoxesModel?> getWaypointWiseBoxes();
   Future<DriverDetailsModel?> getDriverDetails();
   Future<AssignedOrdersModel?> getAssignedOrders();
   Future<AssignedOrdersDetailsModel?> getAssignedOrderDetails(String orderId);
-  Future<SuccessModel?> updateOrderStatus(String orderId, String status);
+  Future<SuccessModel?> updateOrderStatus(
+    String orderId,
+    Map<String, dynamic> data,
+  );
   Future<SuccessModel?> generateOtp(Map<String, dynamic> data);
   Future<SuccessModel?> customerVerifyOtp(Map<String, dynamic> data);
 }
@@ -48,6 +53,18 @@ class RemoteDataSourceImpl implements RemoteDataSource {
     }
 
     return FormData.fromMap(formMap);
+  }
+
+  @override
+  Future<UserDetailsModel?> getUserDetails() async {
+    try {
+      Response response = await ApiClient.get("${APIEndpointUrls.user_detail}");
+      AppLogger.log('getUserDetails:${response.data}');
+      return UserDetailsModel.fromJson(response.data);
+    } catch (e) {
+      AppLogger.error('getUserDetails :: $e');
+      return null;
+    }
   }
 
   @override
@@ -83,10 +100,15 @@ class RemoteDataSourceImpl implements RemoteDataSource {
   }
 
   @override
-  Future<SuccessModel?> updateOrderStatus(String orderId, String status) async {
+  Future<SuccessModel?> updateOrderStatus(
+    String orderId,
+    Map<String, dynamic> data,
+  ) async {
     try {
+      final formdata = await buildFormData(data);
       Response response = await ApiClient.put(
-        "${APIEndpointUrls.assigned_order_detail}/$orderId/?order_status=$status",
+        "${APIEndpointUrls.assigned_order_detail}/$orderId/",
+        data: formdata,
       );
       AppLogger.log('updateOrderStatus:${response.data}');
       return SuccessModel.fromJson(response.data);
@@ -102,7 +124,7 @@ class RemoteDataSourceImpl implements RemoteDataSource {
   ) async {
     try {
       Response response = await ApiClient.get(
-        "${APIEndpointUrls.assigned_order_detail}",
+        "${APIEndpointUrls.assigned_order_detail}/$orderId",
       );
       AppLogger.log('getAssignedOrderDetails:${response.data}');
       return AssignedOrdersDetailsModel.fromJson(response.data);
@@ -149,16 +171,16 @@ class RemoteDataSourceImpl implements RemoteDataSource {
       AppLogger.log('getWaypointWiseBoxes:${response.data}');
       return WaypointWiseBoxesModel.fromJson(response.data);
     } catch (e) {
-      AppLogger.error('getDriverAssignments :: $e');
+      AppLogger.error('getWaypointWiseBoxes :: $e');
       return null;
     }
   }
 
   @override
-  Future<DriverAssignmentModel?> getDriverAssignments() async {
+  Future<DriverAssignmentModel?> getDriverAssignments(int page) async {
     try {
       Response response = await ApiClient.get(
-        "${APIEndpointUrls.driver_assignment}",
+        "${APIEndpointUrls.driver_assignment}?page=$page",
       );
       AppLogger.log('getDriverAssignments:${response.data}');
       return DriverAssignmentModel.fromJson(response.data);

@@ -1,8 +1,41 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-class DistributeLocationsScreen extends StatelessWidget {
+import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
+
+import '../../data/Models/TipperDriver/DriverAssignmentModel.dart';
+import '../../data/bloc/cubits/TipperDriver/DriverAssignment/driver_assignment_cubit.dart';
+import '../../data/bloc/cubits/TipperDriver/DriverAssignment/driver_assignment_states.dart';
+
+class DistributeLocationsScreen extends StatefulWidget {
   const DistributeLocationsScreen({super.key});
+
+  @override
+  State<DistributeLocationsScreen> createState() =>
+      _DistributeLocationsScreenState();
+}
+
+class _DistributeLocationsScreenState extends State<DistributeLocationsScreen> {
+  @override
+  void initState() {
+    super.initState();
+    // Load first page
+    context.read<DriverAssignmentCubit>().getDriverAssignments();
+  }
+
+  bool _onScroll(ScrollNotification n) {
+    if (n is ScrollEndNotification ||
+        n is UserScrollNotification ||
+        n is OverscrollNotification) {
+      final m = n.metrics;
+      if (m.pixels >= (m.maxScrollExtent - 200)) {
+        context.read<DriverAssignmentCubit>().fetchMoreDriverAssignments();
+      }
+    }
+    return false;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -17,7 +50,7 @@ class DistributeLocationsScreen extends StatelessWidget {
         ),
         centerTitle: true,
         title: const Text(
-          "Disturb by Locations",
+          "Distribute by Locations",
           style: TextStyle(
             fontFamily: "roboto",
             fontWeight: FontWeight.w600,
@@ -26,241 +59,115 @@ class DistributeLocationsScreen extends StatelessWidget {
           ),
         ),
       ),
-      body: Padding(
-        padding: const EdgeInsets.only(bottom: 20.0),
-        child: CustomScrollView(
-          slivers: [
-            // Header Card with Gradient
-            SliverToBoxAdapter(
-              child: Container(
-                margin: const EdgeInsets.all(16),
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    colors: [Color(0xFFFF512F), Color(0xFFF09819)],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
+      body: NotificationListener<ScrollNotification>(
+        onNotification: _onScroll,
+        child: BlocBuilder<DriverAssignmentCubit, DriverAssignmentStates>(
+          builder: (context, state) {
+            bool hasNext = false;
+            bool firstLoading = false;
+            bool appending = false;
+            String? error;
+            DriverAssignmentModel? model;
+
+            if (state is DriverAssignmentLoading) {
+              firstLoading = true;
+            } else if (state is DriverAssignmentLoaded) {
+              model = state.driverAssignmentModel;
+              hasNext = state.hasNextPage;
+            } else if (state is DriverAssignmentLoadingMore) {
+              model = state.driverAssignmentModel;
+              hasNext = state.hasNextPage;
+              appending = true;
+            } else if (state is DriverAssignmentFailure) {
+              error = state.error;
+            }
+
+            if (firstLoading) {
+              return const Center(child: CircularProgressIndicator());
+            }
+            if (error != null) {
+              return _ErrorView(
+                message: error!,
+                onRetry: () => context
+                    .read<DriverAssignmentCubit>()
+                    .getDriverAssignments(),
+              );
+            }
+
+            // Flatten assigned_cars across all results
+            final cars = _flattenAssignedCars(model);
+
+            if (cars.isEmpty) {
+              return CustomScrollView(
+                slivers: [
+                  _targetHeader(context),
+                  const SliverFillRemaining(
+                    hasScrollBody: false,
+                    child: Center(child: Text("No assigned cars found.")),
                   ),
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    const SizedBox(height: 8),
-                    const Text(
-                      "Raju Transport",
-                      style: TextStyle(
-                        fontFamily: "roboto",
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                      ),
-                    ),
-                    const SizedBox(height: 6),
-                    const Text(
-                      "Distribute boxes to Customers",
-                      style: TextStyle(
-                        fontFamily: "roboto",
-                        fontSize: 14,
-                        color: Colors.white70,
-                      ),
-                    ),
-                    const SizedBox(height: 20),
+                ],
+              );
+            }
 
-                    // Sub Card (white overlay)
-                    Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Column(
-                        children: [
-                          const Text(
-                            "Reached Customers Locations",
-                            style: TextStyle(
-                              fontFamily: "roboto",
-                              fontSize: 14,
-                              color: Colors.white,
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: const [
-                              Icon(
-                                Icons.access_time,
-                                color: Colors.white70,
-                                size: 16,
-                              ),
-                              SizedBox(width: 4),
-                              Text(
-                                "09:42 pm",
-                                style: TextStyle(
-                                  fontFamily: "roboto",
-                                  fontSize: 13,
-                                  color: Colors.white70,
-                                ),
-                              ),
-                              SizedBox(width: 12),
-                              Icon(
-                                Icons.calendar_today,
-                                color: Colors.white70,
-                                size: 16,
-                              ),
-                              SizedBox(width: 4),
-                              Text(
-                                "08 Jul 2025",
-                                style: TextStyle(
-                                  fontFamily: "roboto",
-                                  fontSize: 13,
-                                  color: Colors.white70,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 20),
+            return CustomScrollView(
+              slivers: [
+                _targetHeader(context),
 
-                    // Order & Extra Boxes
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                      children: const [
-                        Column(
-                          children: [
-                            Text(
-                              "Order Boxes",
-                              style: TextStyle(
-                                fontFamily: "roboto",
-                                fontSize: 14,
-                                color: Colors.white,
-                              ),
-                            ),
-                            SizedBox(height: 6),
-                            Text(
-                              "250",
-                              style: TextStyle(
-                                fontFamily: "roboto",
-                                fontSize: 20,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.white,
-                              ),
-                            ),
-                          ],
-                        ),
-                        Column(
-                          children: [
-                            Text(
-                              "Extra Boxes",
-                              style: TextStyle(
-                                fontFamily: "roboto",
-                                fontSize: 14,
-                                color: Colors.white,
-                              ),
-                            ),
-                            SizedBox(height: 6),
-                            Text(
-                              "100",
-                              style: TextStyle(
-                                fontFamily: "roboto",
-                                fontSize: 20,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.white,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ],
+                // Assigned cars list with pagination tail
+                SliverList.builder(
+                  itemCount: cars.length + (hasNext ? 1 : 0),
+                  itemBuilder: (context, index) {
+                    if (index >= cars.length) {
+                      // tail loader
+                      return const Padding(
+                        padding: EdgeInsets.symmetric(vertical: 16),
+                        child: Center(child: CircularProgressIndicator()),
+                      );
+                    }
+                    final c = cars[index];
+                    return _carCard(
+                      index: index + 1,
+                      driverName: c.driverName,
+                      vehicleNumber: c.vehicleNumber,
+                      ordersCount: c.ordersCount,
+                      status: c.status,
+                      onNav: () => context.push("/delivery_by_locations"),
+                    );
+                  },
                 ),
+
+                if (appending) const SliverToBoxAdapter(child: SizedBox(height: 8)),
+              ],
+            );
+          },
+        ),
+      ),
+    );
+  }
+
+  // ---------- UI pieces ----------
+
+  SliverToBoxAdapter _targetHeader(BuildContext context) {
+    return SliverToBoxAdapter(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        child: Row(
+          children: [
+            const Icon(Icons.location_on, color: Colors.red),
+            const SizedBox(width: 8),
+            const Text(
+              "Assigned Cars",
+              style: TextStyle(
+                fontFamily: "roboto",
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
               ),
             ),
-
-            // Target Location Header
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 8,
-                ),
-                child: Row(
-                  children: [
-                    const Icon(Icons.location_on, color: Colors.red),
-                    const SizedBox(width: 8),
-                    const Text(
-                      "Target Location",
-                      style: TextStyle(
-                        fontFamily: "roboto",
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    const Spacer(),
-                    IconButton(
-                      icon: const Icon(Icons.refresh, size: 20),
-                      onPressed: () {},
-                    ),
-                    IconButton(
-                      icon: const Icon(Icons.filter_list, size: 20),
-                      onPressed: () {},
-                    ),
-                    const Text(
-                      "See All",
-                      style: TextStyle(
-                        fontFamily: "roboto",
-                        fontSize: 14,
-                        color: Colors.red,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-
-            // Locations List
-            SliverList(
-              delegate: SliverChildListDelegate([
-                _locationCard(
-                  index: 1,
-                  name: "Ramesh Kumar",
-                  km: 50,
-                  orderBoxes: 120,
-                  extraBoxes: 10,
-                  status: "Unloading",
-                  context: context,
-                ),
-                _locationCard(
-                  index: 2,
-                  name: "Lakshmi Stores",
-                  km: 40,
-                  orderBoxes: 50,
-                  extraBoxes: 10,
-                  status: "In Transit",
-                  context: context,
-                ),
-                _locationCard(
-                  index: 3,
-                  name: "Venkatesh Traders",
-                  km: 20,
-                  orderBoxes: 76,
-                  extraBoxes: 24,
-                  status: "Handover Started",
-                  context: context,
-                ),
-                _locationCard(
-                  index: 4,
-                  name: "Sita General Store",
-                  km: 20,
-                  orderBoxes: 50,
-                  extraBoxes: 10,
-                  status: "Delivery Completed",
-                  context: context,
-                ),
-              ]),
+            const Spacer(),
+            IconButton(
+              icon: const Icon(Icons.refresh, size: 20),
+              onPressed: () =>
+                  context.read<DriverAssignmentCubit>().getDriverAssignments(),
             ),
           ],
         ),
@@ -268,14 +175,13 @@ class DistributeLocationsScreen extends StatelessWidget {
     );
   }
 
-  Widget _locationCard({
+  Widget _carCard({
     required int index,
-    required String name,
-    required int km,
-    required int orderBoxes,
-    required int extraBoxes,
+    required String driverName,
+    required String vehicleNumber,
+    required int ordersCount,
     required String status,
-    required BuildContext context,
+    required VoidCallback onNav,
   }) {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -293,17 +199,13 @@ class DistributeLocationsScreen extends StatelessWidget {
       ),
       child: Row(
         children: [
-          // Map + Index
+          // Left avatar + index
           Column(
             children: [
-              ClipRRect(
-                borderRadius: BorderRadius.circular(8),
-                child: Image.asset(
-                  "assets/images/map.png", // static map thumb
-                  width: 50,
-                  height: 50,
-                  fit: BoxFit.cover,
-                ),
+              CircleAvatar(
+                radius: 24,
+                backgroundColor: Colors.red.shade100,
+                child: const Icon(Icons.local_shipping, color: Colors.red),
               ),
               const SizedBox(height: 8),
               CircleAvatar(
@@ -328,7 +230,7 @@ class DistributeLocationsScreen extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  name,
+                  driverName,
                   style: const TextStyle(
                     fontFamily: "roboto",
                     fontSize: 16,
@@ -336,55 +238,48 @@ class DistributeLocationsScreen extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 4),
-                Text(
-                  "Avg KM : $km",
-                  style: const TextStyle(fontFamily: "roboto", fontSize: 14),
+                Row(
+                  children: [
+                    const Icon(Icons.directions_car, size: 16),
+                    const SizedBox(width: 6),
+                    Text(
+                      vehicleNumber,
+                      style: const TextStyle(fontFamily: "roboto", fontSize: 14),
+                    ),
+                  ],
                 ),
                 const SizedBox(height: 6),
-                Text(
-                  status,
-                  style: const TextStyle(
-                    fontFamily: "roboto",
-                    fontSize: 14,
-                    color: Colors.green,
-                    fontWeight: FontWeight.w500,
-                  ),
+                Row(
+                  children: [
+                    Icon(Icons.circle, size: 10, color: _statusColor(status)),
+                    const SizedBox(width: 6),
+                    Text(
+                      status,
+                      style: TextStyle(
+                        fontFamily: "roboto",
+                        fontSize: 14,
+                        color: _statusColor(status),
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),
           ),
 
-          // Right side
+          // Right action
           Column(
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
-              Text(
-                "$orderBoxes order boxes",
-                style: const TextStyle(fontFamily: "roboto", fontSize: 13),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                "$extraBoxes extra boxes",
-                style: const TextStyle(
-                  fontFamily: "roboto",
-                  fontSize: 13,
-                  color: Colors.red,
-                ),
-              ),
-              const SizedBox(height: 10),
               ElevatedButton.icon(
-                onPressed: () {
-                  context.push("/delivery_by_locations");
-                },
+                onPressed: onNav,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.red,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(8),
                   ),
-                  padding: const EdgeInsets.symmetric(
-                    vertical: 8,
-                    horizontal: 12,
-                  ),
+                  padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
                 ),
                 icon: const Icon(Icons.navigation, size: 16),
                 label: const Text(
@@ -399,3 +294,75 @@ class DistributeLocationsScreen extends StatelessWidget {
     );
   }
 }
+
+// ---------- Helpers: flatten + map assigned_cars safely ----------
+
+class _AssignedCarView {
+  final String driverName;
+  final String vehicleNumber;
+  final int ordersCount;
+  final int radius;
+  final String status;
+
+  _AssignedCarView({
+    required this.driverName,
+    required this.vehicleNumber,
+    required this.ordersCount,
+    required this.radius,
+    required this.status,
+  });
+}
+
+List<_AssignedCarView> _flattenAssignedCars(DriverAssignmentModel? model) {
+  final out = <_AssignedCarView>[];
+  final results = model?.data?.results ?? const <Results>[];
+
+  for (final r in results) {
+    final list = r.assignedCars; // List<AssignedCars>?
+    if (list == null || list.isEmpty) continue;
+
+    for (final item in list) {
+      out.add(_AssignedCarView(
+        driverName: item.car?.driver ?? '—',
+        vehicleNumber: item.car?.vehicleNumber ?? '—',
+        ordersCount: item.ordersCount ?? 0,
+        radius: item.radius ?? 0,
+        status: item.status ?? '—',
+      ));
+    }
+  }
+  return out;
+}
+
+Color _statusColor(String s) {
+  final x = s.toLowerCase();
+  if (x.contains('pending')) return Colors.orange;
+  if (x.contains('active') || x.contains('running')) return Colors.blue;
+  if (x.contains('completed') || x.contains('done')) return Colors.green;
+  return Colors.black54;
+}
+
+// ---------- Simple error view ----------
+class _ErrorView extends StatelessWidget {
+  final String message;
+  final VoidCallback onRetry;
+  const _ErrorView({required this.message, required this.onRetry, super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 24.0),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(message, textAlign: TextAlign.center, style: const TextStyle(color: Colors.red)),
+            const SizedBox(height: 12),
+            ElevatedButton(onPressed: onRetry, child: const Text("Retry")),
+          ],
+        ),
+      ),
+    );
+  }
+}
+

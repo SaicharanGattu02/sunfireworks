@@ -24,20 +24,19 @@ class DriverAssignmentModel {
 
 class Data {
   int? page;
-  Null? nextPage;
-  Null? prevPage;
+  String? nextPage;
+  String? prevPage;
   int? count;
   int? rowsPerPage;
   List<Results>? results;
 
-  Data({
-    this.page,
-    this.nextPage,
-    this.prevPage,
-    this.count,
-    this.rowsPerPage,
-    this.results,
-  });
+  Data(
+      {this.page,
+        this.nextPage,
+        this.prevPage,
+        this.count,
+        this.rowsPerPage,
+        this.results});
 
   Data.fromJson(Map<String, dynamic> json) {
     page = json['page'];
@@ -70,12 +69,12 @@ class Data {
 class Results {
   String? id;
   DcmAssignment? dcmAssignment;
-  List<Bags>? bags;
+  List<dynamic>? bags;
   List<IndividualItems>? individualItems;
-  List<ComboItems>? comboItems;
+  List<dynamic>? comboItems;
   String? wayPoint;
   String? wayPointName;
-  List<dynamic>? assignedCars;
+  List<AssignedCars>? assignedCars;
   int? noOfVehicles;
   String? selectedPoints;
   int? radiusKm;
@@ -83,56 +82,57 @@ class Results {
   List<dynamic>? extraBags;
   List<dynamic>? extraIndividualItems;
   List<dynamic>? extraComboItems;
+  dynamic? distance;
 
-  Results({
-    this.id,
-    this.dcmAssignment,
-    this.bags,
-    this.individualItems,
-    this.comboItems,
-    this.wayPoint,
-    this.wayPointName,
-    this.assignedCars,
-    this.noOfVehicles,
-    this.selectedPoints,
-    this.radiusKm,
-    this.isActive,
-    this.extraBags,
-    this.extraIndividualItems,
-    this.extraComboItems,
-  });
+  Results(
+      {this.id,
+        this.dcmAssignment,
+        this.bags,
+        this.individualItems,
+        this.comboItems,
+        this.wayPoint,
+        this.wayPointName,
+        this.assignedCars,
+        this.noOfVehicles,
+        this.selectedPoints,
+        this.radiusKm,
+        this.isActive,
+        this.extraBags,
+        this.extraIndividualItems,
+        this.extraComboItems,
+        this.distance});
 
   Results.fromJson(Map<String, dynamic> json) {
     id = json['id'];
     dcmAssignment = json['dcm_assignment'] != null
         ? new DcmAssignment.fromJson(json['dcm_assignment'])
         : null;
-    if (json['bags'] != null) {
-      bags = <Bags>[];
-      json['bags'].forEach((v) {
-        bags!.add(new Bags.fromJson(v));
-      });
-    }
+    // if (json['bags'] != null) {
+    //   bags = <Null>[];
+    //   json['bags'].forEach((v) {
+    //     bags!.add(new Null.fromJson(v));
+    //   });
+    // }
     if (json['individual_items'] != null) {
       individualItems = <IndividualItems>[];
       json['individual_items'].forEach((v) {
         individualItems!.add(new IndividualItems.fromJson(v));
       });
     }
-    if (json['combo_items'] != null) {
-      comboItems = <ComboItems>[];
-      json['combo_items'].forEach((v) {
-        comboItems!.add(new ComboItems.fromJson(v));
-      });
-    }
-    wayPoint = json['way_point'];
-    wayPointName = json['way_point_name'];
-    // if (json['assigned_cars'] != null) {
-    //   assignedCars = <Null>[];
-    //   json['assigned_cars'].forEach((v) {
-    //     assignedCars!.add(new Null.fromJson(v));
+    // if (json['combo_items'] != null) {
+    //   comboItems = <Null>[];
+    //   json['combo_items'].forEach((v) {
+    //     comboItems!.add(new Null.fromJson(v));
     //   });
     // }
+    wayPoint = json['way_point'];
+    wayPointName = json['way_point_name'];
+    if (json['assigned_cars'] != null) {
+      assignedCars = <AssignedCars>[];
+      json['assigned_cars'].forEach((v) {
+        assignedCars!.add(new AssignedCars.fromJson(v));
+      });
+    }
     noOfVehicles = json['no_of_vehicles'];
     selectedPoints = json['selected_points'];
     radiusKm = json['radius_km'];
@@ -155,6 +155,7 @@ class Results {
     //     extraComboItems!.add(new Null.fromJson(v));
     //   });
     // }
+    distance = json['distance'];
   }
 
   Map<String, dynamic> toJson() {
@@ -167,9 +168,8 @@ class Results {
       data['bags'] = this.bags!.map((v) => v.toJson()).toList();
     }
     if (this.individualItems != null) {
-      data['individual_items'] = this.individualItems!
-          .map((v) => v.toJson())
-          .toList();
+      data['individual_items'] =
+          this.individualItems!.map((v) => v.toJson()).toList();
     }
     if (this.comboItems != null) {
       data['combo_items'] = this.comboItems!.map((v) => v.toJson()).toList();
@@ -177,9 +177,8 @@ class Results {
     data['way_point'] = this.wayPoint;
     data['way_point_name'] = this.wayPointName;
     if (this.assignedCars != null) {
-      data['assigned_cars'] = this.assignedCars!
-          .map((v) => v.toJson())
-          .toList();
+      data['assigned_cars'] =
+          this.assignedCars!.map((v) => v.toJson()).toList();
     }
     data['no_of_vehicles'] = this.noOfVehicles;
     data['selected_points'] = this.selectedPoints;
@@ -189,15 +188,14 @@ class Results {
       data['extra_bags'] = this.extraBags!.map((v) => v.toJson()).toList();
     }
     if (this.extraIndividualItems != null) {
-      data['extra_individual_items'] = this.extraIndividualItems!
-          .map((v) => v.toJson())
-          .toList();
+      data['extra_individual_items'] =
+          this.extraIndividualItems!.map((v) => v.toJson()).toList();
     }
     if (this.extraComboItems != null) {
-      data['extra_combo_items'] = this.extraComboItems!
-          .map((v) => v.toJson())
-          .toList();
+      data['extra_combo_items'] =
+          this.extraComboItems!.map((v) => v.toJson()).toList();
     }
+    data['distance'] = this.distance;
     return data;
   }
 }
@@ -210,14 +208,13 @@ class DcmAssignment {
   String? startPoint;
   String? status;
 
-  DcmAssignment({
-    this.id,
-    this.assignmentId,
-    this.dcmVehicle,
-    this.warehouse,
-    this.startPoint,
-    this.status,
-  });
+  DcmAssignment(
+      {this.id,
+        this.assignmentId,
+        this.dcmVehicle,
+        this.warehouse,
+        this.startPoint,
+        this.status});
 
   DcmAssignment.fromJson(Map<String, dynamic> json) {
     id = json['id'];
@@ -240,56 +237,6 @@ class DcmAssignment {
   }
 }
 
-class Bags {
-  String? id;
-  String? code;
-  List<IndividualItems>? individualItems;
-  List<ComboItems>? comboItems;
-  String? qrCode;
-
-  Bags({
-    this.id,
-    this.code,
-    this.individualItems,
-    this.comboItems,
-    this.qrCode,
-  });
-
-  Bags.fromJson(Map<String, dynamic> json) {
-    id = json['id'];
-    code = json['code'];
-    if (json['individual_items'] != null) {
-      individualItems = <IndividualItems>[];
-      json['individual_items'].forEach((v) {
-        individualItems!.add(new IndividualItems.fromJson(v));
-      });
-    }
-    if (json['combo_items'] != null) {
-      comboItems = <ComboItems>[];
-      json['combo_items'].forEach((v) {
-        comboItems!.add(new ComboItems.fromJson(v));
-      });
-    }
-    qrCode = json['qr_code'];
-  }
-
-  Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['id'] = this.id;
-    data['code'] = this.code;
-    if (this.individualItems != null) {
-      data['individual_items'] = this.individualItems!
-          .map((v) => v.toJson())
-          .toList();
-    }
-    if (this.comboItems != null) {
-      data['combo_items'] = this.comboItems!.map((v) => v.toJson()).toList();
-    }
-    data['qr_code'] = this.qrCode;
-    return data;
-  }
-}
-
 class IndividualItems {
   String? id;
   bool? isActive;
@@ -299,15 +246,14 @@ class IndividualItems {
   String? warehouseName;
   String? qrCode;
 
-  IndividualItems({
-    this.id,
-    this.isActive,
-    this.code,
-    this.individual,
-    this.individualName,
-    this.warehouseName,
-    this.qrCode,
-  });
+  IndividualItems(
+      {this.id,
+        this.isActive,
+        this.code,
+        this.individual,
+        this.individualName,
+        this.warehouseName,
+        this.qrCode});
 
   IndividualItems.fromJson(Map<String, dynamic> json) {
     id = json['id'];
@@ -332,27 +278,75 @@ class IndividualItems {
   }
 }
 
-class ComboItems {
+class AssignedCars {
   String? id;
-  String? combo;
-  String? code;
-  String? qrCode;
+  String? carLocation;
+  int? ordersCount;
+  int? radius;
+  String? startDateTime;
+  String? endDateTime;
+  String? status;
+  Car? car;
+  String? createdAt;
 
-  ComboItems({this.id, this.combo, this.code, this.qrCode});
+  AssignedCars(
+      {this.id,
+        this.carLocation,
+        this.ordersCount,
+        this.radius,
+        this.startDateTime,
+        this.endDateTime,
+        this.status,
+        this.car,
+        this.createdAt});
 
-  ComboItems.fromJson(Map<String, dynamic> json) {
+  AssignedCars.fromJson(Map<String, dynamic> json) {
     id = json['id'];
-    combo = json['combo'];
-    code = json['code'];
-    qrCode = json['qr_code'];
+    carLocation = json['car_location'];
+    ordersCount = json['orders_count'];
+    radius = json['radius'];
+    startDateTime = json['start_date_time'];
+    endDateTime = json['end_date_time'];
+    status = json['status'];
+    car = json['car'] != null ? new Car.fromJson(json['car']) : null;
+    createdAt = json['created_at'];
   }
 
   Map<String, dynamic> toJson() {
     final Map<String, dynamic> data = new Map<String, dynamic>();
     data['id'] = this.id;
-    data['combo'] = this.combo;
-    data['code'] = this.code;
-    data['qr_code'] = this.qrCode;
+    data['car_location'] = this.carLocation;
+    data['orders_count'] = this.ordersCount;
+    data['radius'] = this.radius;
+    data['start_date_time'] = this.startDateTime;
+    data['end_date_time'] = this.endDateTime;
+    data['status'] = this.status;
+    if (this.car != null) {
+      data['car'] = this.car!.toJson();
+    }
+    data['created_at'] = this.createdAt;
+    return data;
+  }
+}
+
+class Car {
+  String? carId;
+  String? vehicleNumber;
+  String? driver;
+
+  Car({this.carId, this.vehicleNumber, this.driver});
+
+  Car.fromJson(Map<String, dynamic> json) {
+    carId = json['car_id'];
+    vehicleNumber = json['vehicle_number'];
+    driver = json['driver'];
+  }
+
+  Map<String, dynamic> toJson() {
+    final Map<String, dynamic> data = new Map<String, dynamic>();
+    data['car_id'] = this.carId;
+    data['vehicle_number'] = this.vehicleNumber;
+    data['driver'] = this.driver;
     return data;
   }
 }
