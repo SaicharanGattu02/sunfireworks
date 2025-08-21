@@ -5,9 +5,11 @@ import 'package:flutter_polyline_points/flutter_polyline_points.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:http/http.dart' as http;
+import 'package:sunfireworks/utils/AppLogger.dart';
 
 class DeliveryMapScreen extends StatefulWidget {
-  const DeliveryMapScreen({super.key});
+  final String location;
+  const DeliveryMapScreen({super.key, required this.location});
 
   @override
   State<DeliveryMapScreen> createState() => _DeliveryMapScreenState();
@@ -15,7 +17,6 @@ class DeliveryMapScreen extends StatefulWidget {
 
 class _DeliveryMapScreenState extends State<DeliveryMapScreen> {
   final Completer<GoogleMapController> _controller = Completer();
-  final LatLng _destination = const LatLng(17.444802, 78.377393);
   List<List<LatLng>> _routes = [];
   int _activeRouteIndex = 0;
   Set<Polyline> _polylines = {};
@@ -28,10 +29,21 @@ class _DeliveryMapScreenState extends State<DeliveryMapScreen> {
   static const String _apiKey = 'AIzaSyD0-eauuJ1zBrknaL4uNexkR21cYVOkj7k';
   String _selectedMode = 'driving'; // driving, walking, transit
 
+  late LatLng _destination;
+
   @override
   void initState() {
     super.initState();
     _initialize();
+    _destination = _parseLatLng(widget.location);
+    AppLogger.info("_destination:${_destination}");
+  }
+
+  LatLng _parseLatLng(String input) {
+    final parts = input.split(',');
+    final lat = double.tryParse(parts[0].trim()) ?? 0.0;
+    final lng = double.tryParse(parts[1].trim()) ?? 0.0;
+    return LatLng(lat, lng);
   }
 
   Future<void> _initialize() async {

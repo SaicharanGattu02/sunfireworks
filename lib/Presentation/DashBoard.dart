@@ -24,24 +24,14 @@ class Dashboard extends StatefulWidget {
 class _DashboardState extends State<Dashboard> {
   late PageController pageController;
   int _selectedIndex = 0;
-  static const platform = MethodChannel('com.sunfireworks/location');
   @override
   void initState() {
     super.initState();
     _selectedIndex = widget.initialTab;
     pageController = PageController(initialPage: _selectedIndex);
-    _startLocationService();
   }
 
-  void _startLocationService() async {
-    try {
-      await platform.invokeMethod('startService', {
-        'message': 'Location Service Started',
-      });
-    } on PlatformException catch (e) {
-      print("Failed to start service: '${e.message}'.");
-    }
-  }
+
 
   void onItemTapped(int selectedItems) {
     pageController.jumpToPage(selectedItems);
@@ -91,7 +81,7 @@ class _DashboardState extends State<Dashboard> {
                   role == "dcm_driver"
                       ? HomeScreen()
                       : CustomerLocations(),
-                  OrdersScreen(),
+                  // OrdersScreen(),
                   DriverProfileScreen(),
                 ],
                 physics: const NeverScrollableScrollPhysics(),
@@ -154,15 +144,15 @@ class _DashboardState extends State<Dashboard> {
               color: _selectedIndex == 0 ? Colors.black : Color(0xff994D52),
             ),
           ),
-          BottomNavigationBarItem(
-            label: "Orders",
-            icon: Image.asset(
-              "assets/images/orders.png",
-              width: 25,
-              height: 25,
-              color: _selectedIndex == 1 ? Colors.black : Color(0xff994D52),
-            ),
-          ),
+          // BottomNavigationBarItem(
+          //   label: "Orders",
+          //   icon: Image.asset(
+          //     "assets/images/orders.png",
+          //     width: 25,
+          //     height: 25,
+          //     color: _selectedIndex == 1 ? Colors.black : Color(0xff994D52),
+          //   ),
+          // ),
           BottomNavigationBarItem(
             label: "Profile",
             icon: Image.asset(

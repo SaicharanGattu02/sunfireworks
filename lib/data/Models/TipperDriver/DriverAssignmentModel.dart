@@ -83,6 +83,8 @@ class Results {
   List<dynamic>? extraIndividualItems;
   List<dynamic>? extraComboItems;
   dynamic? distance;
+  int? boxes_count;
+  int? extra_boxes_count;
 
   Results(
       {this.id,
@@ -100,6 +102,8 @@ class Results {
         this.extraBags,
         this.extraIndividualItems,
         this.extraComboItems,
+        this.boxes_count,
+        this.extra_boxes_count,
         this.distance});
 
   Results.fromJson(Map<String, dynamic> json) {
@@ -156,6 +160,8 @@ class Results {
     //   });
     // }
     distance = json['distance'];
+    boxes_count = json['boxes_count'];
+    extra_boxes_count = json['extra_boxes_count'];
   }
 
   Map<String, dynamic> toJson() {
@@ -196,6 +202,8 @@ class Results {
           this.extraComboItems!.map((v) => v.toJson()).toList();
     }
     data['distance'] = this.distance;
+    data['boxes_count'] = this.boxes_count;
+    data['extra_boxes_count'] = this.extra_boxes_count;
     return data;
   }
 }

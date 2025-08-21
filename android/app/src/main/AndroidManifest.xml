@@ -46,7 +46,7 @@
         <!-- Optional: Google Maps API Key for Geocoding -->
         <meta-data
             android:name="com.google.android.geo.API_KEY"
-            android:value="YOUR_API_KEY" />
+            android:value="AIzaSyD0-eauuJ1zBrknaL4uNexkR21cYVOkj7k" />
 
     </application>
 

@@ -5,6 +5,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:sunfireworks/Presentation/DashBoard.dart';
+import 'package:sunfireworks/Presentation/DeliveryMapScreen.dart';
 import 'package:sunfireworks/Presentation/DriverProfileScreen.dart';
 import 'package:sunfireworks/Presentation/MiniTruckDriver/CustomerDeliveryScreen.dart';
 import 'package:sunfireworks/Presentation/TipperDriver/DelivaryDetailsScreen.dart';
@@ -85,6 +86,13 @@ final GoRouter appRouter = GoRouter(
       pageBuilder: (context, state) {
         final order_id = state.uri.queryParameters['order_id'] ?? "";
         return buildSlideTransitionPage(CustomerDeliveryScreen(order_id: order_id), state);
+      },
+    ),
+    GoRoute(
+      path: '/map_screen',
+      pageBuilder: (context, state) {
+        final location = state.uri.queryParameters['location'] ?? "";
+        return buildSlideTransitionPage(DeliveryMapScreen(location: location,), state);
       },
     ),
   ],

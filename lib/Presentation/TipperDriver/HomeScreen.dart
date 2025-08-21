@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:sunfireworks/data/bloc/cubits/TipperDriver/DriverAssignment/driver_assignment_cubit.dart';
@@ -20,10 +21,21 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomescreenState extends State<HomeScreen> {
+  static const platform = MethodChannel('com.sunfireworks/location');
   @override
   void initState() {
     super.initState();
     context.read<DriverAssignmentCubit>().getDriverAssignments();
+  }
+
+  void _startLocationService() async {
+    try {
+      await platform.invokeMethod('startService', {
+        'message': 'Location Service Started',
+      });
+    } on PlatformException catch (e) {
+      print("Failed to start service: '${e.message}'.");
+    }
   }
 
   @override
@@ -155,13 +167,6 @@ class _HomescreenState extends State<HomeScreen> {
                           r.wayPointName ?? (r.dcmAssignment?.warehouse ?? "—");
 
                       final status = r.dcmAssignment?.status ?? "—";
-
-                      // KM (fake/estimated for UI since API doesn't provide direct km)
-                      final km = _estimateKm(r);
-
-                      // final orderBoxes = _calcOrderBoxes(r);
-                      // final extraBoxes = _calcExtraBoxes(r);
-
                       return InkWell(
                         onTap: () {
                           context.push("/distribute_locations");
@@ -169,10 +174,11 @@ class _HomescreenState extends State<HomeScreen> {
                         child: _locationCard(
                           index: index + 1,
                           city: city,
-                          km: km,
-                          orderBoxes: 0,
-                          extraBoxes: 0,
+                          km: r.distance ?? 0,
+                          orderBoxes: r.boxes_count ?? 0,
+                          extraBoxes: r.extra_boxes_count ?? 0,
                           status: status,
+                          location: r.wayPoint ?? "",
                           context: context,
                         ),
                       );
@@ -226,6 +232,7 @@ class _HomescreenState extends State<HomeScreen> {
       floating: false,
       elevation: 0,
       backgroundColor: Colors.white,
+      automaticallyImplyLeading: false,
       centerTitle: false,
       title: BlocBuilder<UserDetailsCubit, UserDetailsStates>(
         builder: (context, state) {
@@ -343,6 +350,7 @@ class _HomescreenState extends State<HomeScreen> {
     required int orderBoxes,
     required int extraBoxes,
     required String status,
+    required String location,
     required BuildContext context,
   }) {
     return Container(
@@ -442,7 +450,8 @@ class _HomescreenState extends State<HomeScreen> {
               const SizedBox(height: 10),
               ElevatedButton.icon(
                 onPressed: () {
-                  context.push("/distribute_locations");
+                  context.push("/map_screen?location=${location}");
+                  _startLocationService();
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.red,
@@ -465,24 +474,6 @@ class _HomescreenState extends State<HomeScreen> {
         ],
       ),
     );
-  }
-
-  // ======= Helpers to map API -> UI =======
-
-  // Rough “km” placeholder (API doesn’t provide; adjust with your own logic)
-  int _estimateKm(Results r) {
-    // You can parse r.wayPoint (WKT: "SRID=4326;POINT (lon lat)") to compute distance from source.
-    // For now, return a stable deterministic pseudo-value so UI looks consistent.
-    final base = (r.wayPointName ?? r.dcmAssignment?.warehouse ?? "x").length;
-    return 300 + (base * 7) % 250; // 300..550
-  }
-
-  int _calcExtraBoxes(Results r) {
-    // Count only “extra” arrays’ lengths (change if server intends item-counts)
-    final eBags = r.extraBags?.length ?? 0;
-    final eInd = r.extraIndividualItems?.length ?? 0;
-    final eCombos = r.extraComboItems?.length ?? 0;
-    return eBags + eInd + eCombos;
   }
 
   Color _statusColor(String status) {
