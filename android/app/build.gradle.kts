@@ -18,6 +18,15 @@ android {
         jvmTarget = JavaVersion.VERSION_11.toString()
     }
 
+    signingConfigs {
+        create("release") {
+            keyAlias = "upload"
+            keyPassword = "sunfireworks"
+            storePassword = "sunfireworks"
+            storeFile = file("D:\\sunfireworks\\android\\app\\upload-keystore.jks")
+        }
+    }
+
     defaultConfig {
         applicationId = "com.example.sunfireworks"
         minSdk = flutter.minSdkVersion

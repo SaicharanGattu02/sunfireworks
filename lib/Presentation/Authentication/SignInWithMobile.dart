@@ -184,7 +184,10 @@ class _SignInWithMobileState extends State<SignInWithMobile> {
                     //     return null;
                     //   },
                     // ),
-                    const SizedBox(height: 16),
+                    Text("Sign In", style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.w600
+                    )),
                     CommonTextField1(
                       lable: "Mobile Number",
                       hint: "Enter mobile number",

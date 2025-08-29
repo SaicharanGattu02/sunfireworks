@@ -129,7 +129,10 @@ class _OtpState extends State<Otp> {
                   0,
                 );
                 PreferenceService().saveString("role", data?.userRole ?? "");
-                PreferenceService().saveString("access_token", data?.accessToken ?? "");
+                PreferenceService().saveString(
+                  "access_token",
+                  data?.accessToken ?? "",
+                );
                 context.pushReplacement("/dashboard");
               } else if (state is AuthFailure) {
                 CustomSnackBar1.show(context, state.message);

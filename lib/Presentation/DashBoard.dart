@@ -24,11 +24,23 @@ class Dashboard extends StatefulWidget {
 class _DashboardState extends State<Dashboard> {
   late PageController pageController;
   int _selectedIndex = 0;
+  static const platform = MethodChannel('com.sunfireworks/location');
   @override
   void initState() {
     super.initState();
     _selectedIndex = widget.initialTab;
     pageController = PageController(initialPage: _selectedIndex);
+    _startLocationService();
+  }
+
+  void _startLocationService() async {
+    try {
+      await platform.invokeMethod('startService', {
+        'message': 'Location Service Started',
+      });
+    } on PlatformException catch (e) {
+      print("Failed to start service: '${e.message}'.");
+    }
   }
 
 

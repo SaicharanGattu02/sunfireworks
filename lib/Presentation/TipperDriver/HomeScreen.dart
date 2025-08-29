@@ -450,7 +450,7 @@ class _HomescreenState extends State<HomeScreen> {
               const SizedBox(height: 10),
               ElevatedButton.icon(
                 onPressed: () {
-                  context.push("/map_screen?location=${location}");
+                  // context.push("/map_screen?location=${location}");
                   _startLocationService();
                 },
                 style: ElevatedButton.styleFrom(
