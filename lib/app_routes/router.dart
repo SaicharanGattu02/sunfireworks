@@ -8,6 +8,7 @@ import 'package:sunfireworks/Presentation/DashBoard.dart';
 import 'package:sunfireworks/Presentation/DeliveryMapScreen.dart';
 import 'package:sunfireworks/Presentation/DriverProfileScreen.dart';
 import 'package:sunfireworks/Presentation/MiniTruckDriver/CustomerDeliveryScreen.dart';
+import 'package:sunfireworks/Presentation/NoGPS.dart';
 import 'package:sunfireworks/Presentation/TipperDriver/DelivaryDetailsScreen.dart';
 import 'package:sunfireworks/Presentation/TipperDriver/HomeScreen.dart';
 import '../Presentation/Authentication/Otp.dart';
@@ -93,6 +94,12 @@ final GoRouter appRouter = GoRouter(
       pageBuilder: (context, state) {
         final location = state.uri.queryParameters['location'] ?? "";
         return buildSlideTransitionPage(DeliveryMapScreen(location: location,), state);
+      },
+    ),
+    GoRoute(
+      path: '/no_gps',
+      pageBuilder: (context, state) {
+        return buildSlideTransitionPage(NoGPS(), state);
       },
     ),
   ],

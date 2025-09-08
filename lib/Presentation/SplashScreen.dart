@@ -3,6 +3,8 @@ import 'package:go_router/go_router.dart';
 import 'package:sunfireworks/services/AuthService.dart';
 import 'package:sunfireworks/utils/AppLogger.dart';
 
+import '../utils/helpers.dart';
+
 class Splashscreen extends StatefulWidget {
   const Splashscreen({super.key});
 
@@ -17,12 +19,15 @@ class _SplashscreenState extends State<Splashscreen> {
     Future.delayed(Duration(seconds: 2), () async {
       final access_token = await AuthService.getAccessToken();
       AppLogger.info("access_token:${access_token}");
-      if(access_token!=null){
-        context.pushReplacement("/dashboard");
-      }else{
+      if (access_token != null) {
+        if (!(await checkGPSstatus())) {
+          context.pushReplacement("/no_gps");
+        } else {
+          context.pushReplacement("/dashboard");
+        }
+      } else {
         context.pushReplacement("/sign_in_with_mobile");
       }
-
     });
   }
 

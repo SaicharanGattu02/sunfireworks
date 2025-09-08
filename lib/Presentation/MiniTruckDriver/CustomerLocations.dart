@@ -97,7 +97,7 @@ class _CustomerLocationsState extends State<CustomerLocations> {
                 ),
                 const SizedBox(width: 12),
                  Text(
-                  displayName??"",
+                   "Hi, ${displayName??""}",
                   style: TextStyle(fontWeight: FontWeight.w600,fontSize: 16),
                 ),
               ],
@@ -201,7 +201,7 @@ class _StopsError extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.all(24),
       child: Text(
-        'Failed to load: $message',
+        'No Orders Assigned!',
         style: TextStyle(
           color: Colors.red.shade600,
           fontWeight: FontWeight.w700,

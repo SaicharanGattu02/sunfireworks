@@ -1,16 +1,22 @@
-import 'dart:developer' as AppLogger;
+
 import 'package:flutter/material.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:go_router/go_router.dart';
 import '../utils/constants.dart';
+import '../utils/AppLogger.dart';
+import 'package:flutter/foundation.dart';
+import 'package:flutter/widgets.dart';
+
+import '../utils/preferences.dart';
+
+
 
 class AuthService {
   static const String _accessTokenKey = "access_token";
   static const String _refreshTokenKey = "refresh_token";
-  static const String _tokenExpiryKey = "token_expiry";
-  static const String _role = "role";
+  static const String _tokenExpiryKey = "token_expiry"; // epoch millis
+  static const String _roleKey = "role";
 
-  static final FlutterSecureStorage _storage = const FlutterSecureStorage();
+  static final PreferenceService _prefs = PreferenceService();
 
   /// Check if the user is a guest (no token or empty token)
   static Future<bool> get isGuest async {
@@ -20,31 +26,24 @@ class AuthService {
 
   /// Get stored access token
   static Future<String?> getAccessToken() async {
-    return await _storage.read(key: _accessTokenKey);
+    return await _prefs.getString(_accessTokenKey);
   }
 
   /// Get stored refresh token
   static Future<String?> getRefreshToken() async {
-    return await _storage.read(key: _refreshTokenKey);
+    return await _prefs.getString(_refreshTokenKey);
   }
 
   /// Get stored role
   static Future<String?> getRole() async {
-    return await _storage.read(key: _role);
+    return await _prefs.getString(_roleKey);
   }
 
-
-
+  /// Returns true if token has expired (or we can't determine expiry)
   static Future<bool> isTokenExpired() async {
-    final expiryTimestampStr = await _storage.read(key: _tokenExpiryKey);
-    if (expiryTimestampStr == null) {
-      AppLogger.log('No expiry timestamp found, considering token expired');
-      return true;
-    }
-
-    final expiryTimestamp = int.tryParse(expiryTimestampStr);
+    final expiryTimestamp = await _prefs.getInt(_tokenExpiryKey);
     if (expiryTimestamp == null) {
-      AppLogger.log('Invalid expiry timestamp, considering token expired');
+      AppLogger.log('No expiry timestamp found, considering token expired');
       return true;
     }
 
@@ -57,91 +56,52 @@ class AuthService {
     return isExpired;
   }
 
-  /// Save tokens and expiry time
   static Future<void> saveTokens(
-    String accessToken,
-    String? refreshToken,
-    String? role,
-    int expiresIn,
-  ) async {
-    await _storage.write(key: _accessTokenKey, value: accessToken);
-    await _storage.write(key: _refreshTokenKey, value: refreshToken ?? "");
-    await _storage.write(key: _role, value: role ?? "");
-    await _storage.write(key: _tokenExpiryKey, value: expiresIn.toString());
-    debugPrint('Tokens saved: accessToken=$accessToken, expiryTime=$expiresIn');
+      String accessToken,
+      String? refreshToken,
+      String? role,
+      int expiresIn,
+      ) async {
+    final nowMs = DateTime.now().millisecondsSinceEpoch;
+
+    int expiryMs;
+    if (expiresIn > 1000000000000) {
+      // Looks like epoch in ms
+      expiryMs = expiresIn;
+    } else if (expiresIn > 1000000000) {
+      // Looks like epoch in seconds
+      expiryMs = expiresIn * 1000;
+    } else {
+      // Looks like duration in seconds
+      expiryMs = nowMs + (expiresIn * 1000);
+    }
+
+     _prefs.saveString(_accessTokenKey, accessToken);
+     _prefs.saveString(_refreshTokenKey, refreshToken ?? "");
+     _prefs.saveString(_roleKey, role ?? "");
+     _prefs.saveInt(_tokenExpiryKey, expiryMs);
+
+    debugPrint(
+      'Tokens saved: accessToken=<redacted>, refreshToken=${refreshToken != null ? "<redacted>" : "null"}, role=$role, expiryMs=$expiryMs',
+    );
   }
 
-  /// Refresh token
-  // static Future<bool> refreshToken() async {
-  //   final refreshToken = await getRefreshToken();
-  //   if (refreshToken == null) {
-  //     debugPrint('❌ No refresh token available');
-  //     return false;
-  //   }
-  //
-  //   try {
-  //     final response = await ApiClient.post(
-  //       APIEndpointUrls.refreshtoken,
-  //       data: {"refresh": refreshToken},
-  //     );
-  //
-  //     if (response.statusCode == 200) {
-  //       final tokenData = response.data["data"];
-  //       final newAccessToken = tokenData["access"];
-  //       final newRefreshToken = tokenData["refresh"];
-  //       final expiryTime = tokenData["expiry_time"];
-  //
-  //       if (newAccessToken == null || newRefreshToken == null || expiryTime == null) {
-  //         debugPrint("❌ Missing token data in response: $tokenData");
-  //         return false;
-  //       }
-  //
-  //       await saveTokens(newAccessToken, newRefreshToken, expiryTime);
-  //       debugPrint("✅ Token refreshed and saved successfully");
-  //       return true;
-  //     } else {
-  //       debugPrint("❌ Refresh token request failed with status: ${response.statusCode}");
-  //       return false;
-  //     }
-  //   } catch (e) {
-  //     debugPrint("❌ Token refresh failed: $e");
-  //     return false;
-  //   }
-  // }
-
-  /// Logout and clear tokens, redirect to sign-in screen
-  // static Future<void> logout() async {
-  //   await _storage.deleteAll(); // clear all tokens
-  //   debugPrint('Tokens cleared, user logged out');
-  //
-  //   final context = navigatorKey.currentContext;
-  //   if (context != null) {
-  //     GoRouter.of(context).go('/onboarding');
-  //   } else {
-  //     debugPrint('Context is null, scheduling GoRouter navigation after frame');
-  //     WidgetsBinding.instance.addPostFrameCallback((_) {
-  //       final postFrameContext = navigatorKey.currentContext;
-  //       if (postFrameContext != null) {
-  //         GoRouter.of(postFrameContext).go('/onboarding');
-  //       } else {
-  //         debugPrint('Still no context available after frame');
-  //         // Optional: consider forcing rebuild or restarting app
-  //       }
-  //     });
-  //   }
-  // }
+  /// Logout and clear tokens, then redirect to sign-in/onboarding
   static Future<void> logout() async {
-    await _storage.deleteAll(); // clear all tokens
+    // Clear only our relevant keys (safer than nuking *all* app preferences, but
+    // if you truly want to wipe everything, call _prefs.clearPreferences()).
+    await _prefs.remove(_accessTokenKey);
+    await _prefs.remove(_refreshTokenKey);
+    await _prefs.remove(_tokenExpiryKey);
+    await _prefs.remove(_roleKey);
+
     debugPrint('Tokens cleared, user logged out');
 
-    // Use a post-frame callback with a short delay
+    // Defer navigation slightly to ensure a valid context after frame
     Future.microtask(() {
       WidgetsBinding.instance.addPostFrameCallback((_) async {
-        await Future.delayed(
-          const Duration(milliseconds: 100),
-        ); // ensures context is ready
+        await Future.delayed(const Duration(milliseconds: 100));
         final context = navigatorKey.currentContext;
-
         if (context != null) {
           debugPrint('Navigating to /onboarding');
           GoRouter.of(context).go('/onboarding');
@@ -152,3 +112,4 @@ class AuthService {
     });
   }
 }
+

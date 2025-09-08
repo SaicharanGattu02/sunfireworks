@@ -1,6 +1,6 @@
 class APIEndpointUrls {
-  // static const String baseUrl = 'http://192.168.80.99:8090/';
-  static const String baseUrl = 'https://sunfirework.ozrit.in/';
+  static const String baseUrl = 'http://192.168.80.99:8090/';
+  // static const String baseUrl = 'https://sunfirework.ozrit.in/';
   static const String apiUrl = 'api/';
   static const String authUrl = 'auth/';
   static const String driverUrl = 'driver/';

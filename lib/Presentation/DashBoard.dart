@@ -78,7 +78,6 @@ class _DashboardState extends State<Dashboard> {
                 if (state is InternetStatusLostState) {
                   context.push('/no_internet');
                 } else if (state is InternetStatusBackState) {
-                  context.pop();
                 }
               },
               child: PageView(
