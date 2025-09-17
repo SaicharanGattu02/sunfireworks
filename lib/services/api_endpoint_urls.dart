@@ -1,5 +1,5 @@
 class APIEndpointUrls {
-  static const String baseUrl = 'http://192.168.80.99:8090/';
+  static const String baseUrl = 'http://192.168.80.115:8090/';
   // static const String baseUrl = 'https://sunfirework.ozrit.in/';
   static const String apiUrl = 'api/';
   static const String authUrl = 'auth/';
@@ -24,4 +24,6 @@ class APIEndpointUrls {
   static const String customer_generate_otp =
       '${driverUrl}customer-generate-otp/';
   static const String customer_verify_otp = '${driverUrl}customer-verify-otp/';
+  static const String car_verify_otp = '${driverUrl}verify-cardriver-otp/';
+  static const String car_generate_otp = '${driverUrl}generate-cardriver-otp/';
 }

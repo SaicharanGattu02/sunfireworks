@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../utils/constants.dart';
@@ -7,8 +6,6 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 
 import '../utils/preferences.dart';
-
-
 
 class AuthService {
   static const String _accessTokenKey = "access_token";
@@ -57,11 +54,11 @@ class AuthService {
   }
 
   static Future<void> saveTokens(
-      String accessToken,
-      String? refreshToken,
-      String? role,
-      int expiresIn,
-      ) async {
+    String accessToken,
+    String? refreshToken,
+    String? role,
+    int expiresIn,
+  ) async {
     final nowMs = DateTime.now().millisecondsSinceEpoch;
 
     int expiryMs;
@@ -76,10 +73,10 @@ class AuthService {
       expiryMs = nowMs + (expiresIn * 1000);
     }
 
-     _prefs.saveString(_accessTokenKey, accessToken);
-     _prefs.saveString(_refreshTokenKey, refreshToken ?? "");
-     _prefs.saveString(_roleKey, role ?? "");
-     _prefs.saveInt(_tokenExpiryKey, expiryMs);
+    _prefs.saveString(_accessTokenKey, accessToken);
+    _prefs.saveString(_refreshTokenKey, refreshToken ?? "");
+    _prefs.saveString(_roleKey, role ?? "");
+    _prefs.saveInt(_tokenExpiryKey, expiryMs);
 
     debugPrint(
       'Tokens saved: accessToken=<redacted>, refreshToken=${refreshToken != null ? "<redacted>" : "null"}, role=$role, expiryMs=$expiryMs',
@@ -112,4 +109,3 @@ class AuthService {
     });
   }
 }
-

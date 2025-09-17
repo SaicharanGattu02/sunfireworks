@@ -1,360 +1,288 @@
 class DriverAssignmentModel {
-  bool? success;
-  String? message;
-  Data? data;
+  final bool success;
+  final String message;
+  final AssignmentData? data;
 
-  DriverAssignmentModel({this.success, this.message, this.data});
+  DriverAssignmentModel({
+    required this.success,
+    required this.message,
+    this.data,
+  });
 
-  DriverAssignmentModel.fromJson(Map<String, dynamic> json) {
-    success = json['success'];
-    message = json['message'];
-    data = json['data'] != null ? new Data.fromJson(json['data']) : null;
-  }
-
-  Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['success'] = this.success;
-    data['message'] = this.message;
-    if (this.data != null) {
-      data['data'] = this.data!.toJson();
-    }
-    return data;
+  factory DriverAssignmentModel.fromJson(Map<String, dynamic> json) {
+    return DriverAssignmentModel(
+      success: json['success'] ?? false,
+      message: json['message'] ?? '',
+      data: json['data'] != null ? AssignmentData.fromJson(json['data']) : null,
+    );
   }
 }
 
-class Data {
-  int? page;
-  String? nextPage;
-  String? prevPage;
-  int? count;
-  int? rowsPerPage;
-  List<Results>? results;
+class AssignmentData {
+  final int page;
+  final int? nextPage;
+  final int? prevPage;
+  final int count;
+  final int rowsPerPage;
+  final List<AssignmentResult> results;
 
-  Data(
-      {this.page,
-        this.nextPage,
-        this.prevPage,
-        this.count,
-        this.rowsPerPage,
-        this.results});
+  AssignmentData({
+    required this.page,
+    this.nextPage,
+    this.prevPage,
+    required this.count,
+    required this.rowsPerPage,
+    required this.results,
+  });
 
-  Data.fromJson(Map<String, dynamic> json) {
-    page = json['page'];
-    nextPage = json['next_page'];
-    prevPage = json['prev_page'];
-    count = json['count'];
-    rowsPerPage = json['rows_per_page'];
-    if (json['results'] != null) {
-      results = <Results>[];
-      json['results'].forEach((v) {
-        results!.add(new Results.fromJson(v));
-      });
-    }
-  }
-
-  Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['page'] = this.page;
-    data['next_page'] = this.nextPage;
-    data['prev_page'] = this.prevPage;
-    data['count'] = this.count;
-    data['rows_per_page'] = this.rowsPerPage;
-    if (this.results != null) {
-      data['results'] = this.results!.map((v) => v.toJson()).toList();
-    }
-    return data;
+  factory AssignmentData.fromJson(Map<String, dynamic> json) {
+    return AssignmentData(
+      page: json['page'] ?? 0,
+      nextPage: json['next_page'],
+      prevPage: json['prev_page'],
+      count: json['count'] ?? 0,
+      rowsPerPage: json['rows_per_page'] ?? 0,
+      results: (json['results'] as List<dynamic>? ?? [])
+          .map((e) => AssignmentResult.fromJson(e))
+          .toList(),
+    );
   }
 }
 
-class Results {
-  String? id;
-  DcmAssignment? dcmAssignment;
-  List<dynamic>? bags;
-  List<IndividualItems>? individualItems;
-  List<dynamic>? comboItems;
-  String? wayPoint;
-  String? wayPointName;
-  List<AssignedCars>? assignedCars;
-  int? noOfVehicles;
-  String? selectedPoints;
-  int? radiusKm;
-  bool? isActive;
-  List<dynamic>? extraBags;
-  List<dynamic>? extraIndividualItems;
-  List<dynamic>? extraComboItems;
-  dynamic? distance;
-  int? boxes_count;
-  int? extra_boxes_count;
+class AssignmentResult {
+  final String id;
+  final DcmAssignment? dcmAssignment;
+  final List<dynamic> bags;
+  final List<dynamic> individualItems;
+  final List<ComboItem> comboItems;
+  final String? wayPoint;
+  final String? wayPointName;
+  final List<AssignedCar> assignedCars;
+  final int noOfVehicles;
+  final String? selectedPoints;
+  final dynamic radiusKm;
+  final bool isActive;
+  final List<dynamic> extraBags;
+  final List<dynamic> extraIndividualItems;
+  final List<dynamic> extraComboItems;
+  final dynamic distance;
+  final int boxesCount;
+  final int extraBoxesCount;
 
-  Results(
-      {this.id,
-        this.dcmAssignment,
-        this.bags,
-        this.individualItems,
-        this.comboItems,
-        this.wayPoint,
-        this.wayPointName,
-        this.assignedCars,
-        this.noOfVehicles,
-        this.selectedPoints,
-        this.radiusKm,
-        this.isActive,
-        this.extraBags,
-        this.extraIndividualItems,
-        this.extraComboItems,
-        this.boxes_count,
-        this.extra_boxes_count,
-        this.distance});
+  AssignmentResult({
+    required this.id,
+    this.dcmAssignment,
+    required this.bags,
+    required this.individualItems,
+    required this.comboItems,
+    this.wayPoint,
+    this.wayPointName,
+    required this.assignedCars,
+    required this.noOfVehicles,
+    this.selectedPoints,
+    this.radiusKm,
+    required this.isActive,
+    required this.extraBags,
+    required this.extraIndividualItems,
+    required this.extraComboItems,
+    this.distance,
+    required this.boxesCount,
+    required this.extraBoxesCount,
+  });
 
-  Results.fromJson(Map<String, dynamic> json) {
-    id = json['id'];
-    dcmAssignment = json['dcm_assignment'] != null
-        ? new DcmAssignment.fromJson(json['dcm_assignment'])
-        : null;
-    // if (json['bags'] != null) {
-    //   bags = <Null>[];
-    //   json['bags'].forEach((v) {
-    //     bags!.add(new Null.fromJson(v));
-    //   });
-    // }
-    if (json['individual_items'] != null) {
-      individualItems = <IndividualItems>[];
-      json['individual_items'].forEach((v) {
-        individualItems!.add(new IndividualItems.fromJson(v));
-      });
-    }
-    // if (json['combo_items'] != null) {
-    //   comboItems = <Null>[];
-    //   json['combo_items'].forEach((v) {
-    //     comboItems!.add(new Null.fromJson(v));
-    //   });
-    // }
-    wayPoint = json['way_point'];
-    wayPointName = json['way_point_name'];
-    if (json['assigned_cars'] != null) {
-      assignedCars = <AssignedCars>[];
-      json['assigned_cars'].forEach((v) {
-        assignedCars!.add(new AssignedCars.fromJson(v));
-      });
-    }
-    noOfVehicles = json['no_of_vehicles'];
-    selectedPoints = json['selected_points'];
-    radiusKm = json['radius_km'];
-    isActive = json['is_active'];
-    // if (json['extra_bags'] != null) {
-    //   extraBags = <Null>[];
-    //   json['extra_bags'].forEach((v) {
-    //     extraBags!.add(new Null.fromJson(v));
-    //   });
-    // }
-    // if (json['extra_individual_items'] != null) {
-    //   extraIndividualItems = <Null>[];
-    //   json['extra_individual_items'].forEach((v) {
-    //     extraIndividualItems!.add(new Null.fromJson(v));
-    //   });
-    // }
-    // if (json['extra_combo_items'] != null) {
-    //   extraComboItems = <Null>[];
-    //   json['extra_combo_items'].forEach((v) {
-    //     extraComboItems!.add(new Null.fromJson(v));
-    //   });
-    // }
-    distance = json['distance'];
-    boxes_count = json['boxes_count'];
-    extra_boxes_count = json['extra_boxes_count'];
-  }
-
-  Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['id'] = this.id;
-    if (this.dcmAssignment != null) {
-      data['dcm_assignment'] = this.dcmAssignment!.toJson();
-    }
-    if (this.bags != null) {
-      data['bags'] = this.bags!.map((v) => v.toJson()).toList();
-    }
-    if (this.individualItems != null) {
-      data['individual_items'] =
-          this.individualItems!.map((v) => v.toJson()).toList();
-    }
-    if (this.comboItems != null) {
-      data['combo_items'] = this.comboItems!.map((v) => v.toJson()).toList();
-    }
-    data['way_point'] = this.wayPoint;
-    data['way_point_name'] = this.wayPointName;
-    if (this.assignedCars != null) {
-      data['assigned_cars'] =
-          this.assignedCars!.map((v) => v.toJson()).toList();
-    }
-    data['no_of_vehicles'] = this.noOfVehicles;
-    data['selected_points'] = this.selectedPoints;
-    data['radius_km'] = this.radiusKm;
-    data['is_active'] = this.isActive;
-    if (this.extraBags != null) {
-      data['extra_bags'] = this.extraBags!.map((v) => v.toJson()).toList();
-    }
-    if (this.extraIndividualItems != null) {
-      data['extra_individual_items'] =
-          this.extraIndividualItems!.map((v) => v.toJson()).toList();
-    }
-    if (this.extraComboItems != null) {
-      data['extra_combo_items'] =
-          this.extraComboItems!.map((v) => v.toJson()).toList();
-    }
-    data['distance'] = this.distance;
-    data['boxes_count'] = this.boxes_count;
-    data['extra_boxes_count'] = this.extra_boxes_count;
-    return data;
+  factory AssignmentResult.fromJson(Map<String, dynamic> json) {
+    return AssignmentResult(
+      id: json['id'] ?? '',
+      dcmAssignment: json['dcm_assignment'] != null
+          ? DcmAssignment.fromJson(json['dcm_assignment'])
+          : null,
+      bags: json['bags'] ?? [],
+      individualItems: json['individual_items'] ?? [],
+      comboItems: (json['combo_items'] as List<dynamic>? ?? [])
+          .map((e) => ComboItem.fromJson(e))
+          .toList(),
+      wayPoint: json['way_point'],
+      wayPointName: json['way_point_name'],
+      assignedCars: (json['assigned_cars'] as List<dynamic>? ?? [])
+          .map((e) => AssignedCar.fromJson(e))
+          .toList(),
+      noOfVehicles: json['no_of_vehicles'] ?? 0,
+      selectedPoints: json['selected_points'],
+      radiusKm: json['radius_km'],
+      isActive: json['is_active'] ?? false,
+      extraBags: json['extra_bags'] ?? [],
+      extraIndividualItems: json['extra_individual_items'] ?? [],
+      extraComboItems: json['extra_combo_items'] ?? [],
+      distance: json['distance'],
+      boxesCount: json['boxes_count'] ?? 0,
+      extraBoxesCount: json['extra_boxes_count'] ?? 0,
+    );
   }
 }
 
 class DcmAssignment {
-  String? id;
-  String? assignmentId;
-  String? dcmVehicle;
-  String? warehouse;
-  String? startPoint;
-  String? status;
+  final String id;
+  final String assignmentId;
+  final String dcmVehicle;
+  final String warehouse;
+  final String startPoint;
+  final String status;
 
-  DcmAssignment(
-      {this.id,
-        this.assignmentId,
-        this.dcmVehicle,
-        this.warehouse,
-        this.startPoint,
-        this.status});
+  DcmAssignment({
+    required this.id,
+    required this.assignmentId,
+    required this.dcmVehicle,
+    required this.warehouse,
+    required this.startPoint,
+    required this.status,
+  });
 
-  DcmAssignment.fromJson(Map<String, dynamic> json) {
-    id = json['id'];
-    assignmentId = json['assignment_id'];
-    dcmVehicle = json['dcm_vehicle'];
-    warehouse = json['warehouse'];
-    startPoint = json['start_point'];
-    status = json['status'];
-  }
-
-  Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['id'] = this.id;
-    data['assignment_id'] = this.assignmentId;
-    data['dcm_vehicle'] = this.dcmVehicle;
-    data['warehouse'] = this.warehouse;
-    data['start_point'] = this.startPoint;
-    data['status'] = this.status;
-    return data;
+  factory DcmAssignment.fromJson(Map<String, dynamic> json) {
+    return DcmAssignment(
+      id: json['id'] ?? '',
+      assignmentId: json['assignment_id'] ?? '',
+      dcmVehicle: json['dcm_vehicle'] ?? '',
+      warehouse: json['warehouse'] ?? '',
+      startPoint: json['start_point'] ?? '',
+      status: json['status'] ?? '',
+    );
   }
 }
 
-class IndividualItems {
-  String? id;
-  bool? isActive;
-  String? code;
-  String? individual;
-  String? individualName;
-  String? warehouseName;
-  String? qrCode;
+class ComboItem {
+  final String id;
+  final String combo;
+  final String code;
+  final String qrCode;
 
-  IndividualItems(
-      {this.id,
-        this.isActive,
-        this.code,
-        this.individual,
-        this.individualName,
-        this.warehouseName,
-        this.qrCode});
+  ComboItem({
+    required this.id,
+    required this.combo,
+    required this.code,
+    required this.qrCode,
+  });
 
-  IndividualItems.fromJson(Map<String, dynamic> json) {
-    id = json['id'];
-    isActive = json['is_active'];
-    code = json['code'];
-    individual = json['individual'];
-    individualName = json['individual_name'];
-    warehouseName = json['warehouse_name'];
-    qrCode = json['qr_code'];
-  }
-
-  Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['id'] = this.id;
-    data['is_active'] = this.isActive;
-    data['code'] = this.code;
-    data['individual'] = this.individual;
-    data['individual_name'] = this.individualName;
-    data['warehouse_name'] = this.warehouseName;
-    data['qr_code'] = this.qrCode;
-    return data;
+  factory ComboItem.fromJson(Map<String, dynamic> json) {
+    return ComboItem(
+      id: json['id'] ?? '',
+      combo: json['combo'] ?? '',
+      code: json['code'] ?? '',
+      qrCode: json['qr_code'] ?? '',
+    );
   }
 }
 
-class AssignedCars {
-  String? id;
-  String? carLocation;
-  int? ordersCount;
-  int? radius;
-  String? startDateTime;
-  String? endDateTime;
-  String? status;
-  Car? car;
-  String? createdAt;
+class AssignedCar {
+  final String id;
+  final String carLocation;
+  final int ordersCount;
+  final int? radius;
+  final String startDateTime;
+  final String endDateTime;
+  final String status;
+  final Car? car;
+  final List<IndividualStockDetail> individualStockDetails;
+  final List<ComboStockDetail> comboStockDetails;
+  final String selectedPoint;
+  final String createdAt;
+  final List<dynamic> packStockDetails;
 
-  AssignedCars(
-      {this.id,
-        this.carLocation,
-        this.ordersCount,
-        this.radius,
-        this.startDateTime,
-        this.endDateTime,
-        this.status,
-        this.car,
-        this.createdAt});
+  AssignedCar({
+    required this.id,
+    required this.carLocation,
+    required this.ordersCount,
+    this.radius,
+    required this.startDateTime,
+    required this.endDateTime,
+    required this.status,
+    this.car,
+    required this.individualStockDetails,
+    required this.comboStockDetails,
+    required this.selectedPoint,
+    required this.createdAt,
+    required this.packStockDetails,
+  });
 
-  AssignedCars.fromJson(Map<String, dynamic> json) {
-    id = json['id'];
-    carLocation = json['car_location'];
-    ordersCount = json['orders_count'];
-    radius = json['radius'];
-    startDateTime = json['start_date_time'];
-    endDateTime = json['end_date_time'];
-    status = json['status'];
-    car = json['car'] != null ? new Car.fromJson(json['car']) : null;
-    createdAt = json['created_at'];
-  }
-
-  Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['id'] = this.id;
-    data['car_location'] = this.carLocation;
-    data['orders_count'] = this.ordersCount;
-    data['radius'] = this.radius;
-    data['start_date_time'] = this.startDateTime;
-    data['end_date_time'] = this.endDateTime;
-    data['status'] = this.status;
-    if (this.car != null) {
-      data['car'] = this.car!.toJson();
-    }
-    data['created_at'] = this.createdAt;
-    return data;
+  factory AssignedCar.fromJson(Map<String, dynamic> json) {
+    return AssignedCar(
+      id: json['id'] ?? '',
+      carLocation: json['car_location'] ?? '',
+      ordersCount: json['orders_count'] ?? 0,
+      radius: json['radius'],
+      startDateTime: json['start_date_time'] ?? '',
+      endDateTime: json['end_date_time'] ?? '',
+      status: json['status'] ?? '',
+      car: json['car'] != null ? Car.fromJson(json['car']) : null,
+      individualStockDetails:
+      (json['individual_stock_details'] as List<dynamic>? ?? [])
+          .map((e) => IndividualStockDetail.fromJson(e))
+          .toList(),
+      comboStockDetails: (json['combo_stock_details'] as List<dynamic>? ?? [])
+          .map((e) => ComboStockDetail.fromJson(e))
+          .toList(),
+      selectedPoint: json['selected_point'] ?? '',
+      createdAt: json['created_at'] ?? '',
+      packStockDetails: json['pack_stock_details'] ?? [],
+    );
   }
 }
 
 class Car {
-  String? carId;
-  String? vehicleNumber;
-  String? driver;
+  final String carId;
+  final String vehicleNumber;
+  final String driver;
 
-  Car({this.carId, this.vehicleNumber, this.driver});
+  Car({
+    required this.carId,
+    required this.vehicleNumber,
+    required this.driver,
+  });
 
-  Car.fromJson(Map<String, dynamic> json) {
-    carId = json['car_id'];
-    vehicleNumber = json['vehicle_number'];
-    driver = json['driver'];
+  factory Car.fromJson(Map<String, dynamic> json) {
+    return Car(
+      carId: json['car_id'] ?? '',
+      vehicleNumber: json['vehicle_number'] ?? '',
+      driver: json['driver'] ?? '',
+    );
   }
+}
 
-  Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['car_id'] = this.carId;
-    data['vehicle_number'] = this.vehicleNumber;
-    data['driver'] = this.driver;
-    return data;
+class IndividualStockDetail {
+  final String individualId;
+  final String individualName;
+  final int stockRequired;
+
+  IndividualStockDetail({
+    required this.individualId,
+    required this.individualName,
+    required this.stockRequired,
+  });
+
+  factory IndividualStockDetail.fromJson(Map<String, dynamic> json) {
+    return IndividualStockDetail(
+      individualId: json['individual_id'] ?? '',
+      individualName: json['individual_name'] ?? '',
+      stockRequired: json['stock_required'] ?? 0,
+    );
+  }
+}
+
+class ComboStockDetail {
+  final String comboId;
+  final String comboName;
+  final int stockRequired;
+
+  ComboStockDetail({
+    required this.comboId,
+    required this.comboName,
+    required this.stockRequired,
+  });
+
+  factory ComboStockDetail.fromJson(Map<String, dynamic> json) {
+    return ComboStockDetail(
+      comboId: json['combo_id'] ?? '',
+      comboName: json['combo_name'] ?? '',
+      stockRequired: json['stock_required'] ?? 0,
+    );
   }
 }

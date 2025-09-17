@@ -27,22 +27,23 @@ class Data {
   String? orderStatus;
   String? confirmedThrough;
   String? subTotal;
-  Null? shippingCharge;
-  Null? taxAmount;
+  dynamic shippingCharge;
+  dynamic taxAmount;
   String? totalAmount;
   List<OrderedCustomer>? orderedCustomer;
   List<Orders>? orders;
 
-  Data(
-      {this.orderId,
-        this.orderStatus,
-        this.confirmedThrough,
-        this.subTotal,
-        this.shippingCharge,
-        this.taxAmount,
-        this.totalAmount,
-        this.orderedCustomer,
-        this.orders});
+  Data({
+    this.orderId,
+    this.orderStatus,
+    this.confirmedThrough,
+    this.subTotal,
+    this.shippingCharge,
+    this.taxAmount,
+    this.totalAmount,
+    this.orderedCustomer,
+    this.orders,
+  });
 
   Data.fromJson(Map<String, dynamic> json) {
     orderId = json['order_id'];
@@ -76,8 +77,9 @@ class Data {
     data['tax_amount'] = this.taxAmount;
     data['total_amount'] = this.totalAmount;
     if (this.orderedCustomer != null) {
-      data['ordered_customer'] =
-          this.orderedCustomer!.map((v) => v.toJson()).toList();
+      data['ordered_customer'] = this.orderedCustomer!
+          .map((v) => v.toJson())
+          .toList();
     }
     if (this.orders != null) {
       data['orders'] = this.orders!.map((v) => v.toJson()).toList();
@@ -96,15 +98,16 @@ class OrderedCustomer {
   String? pincode;
   List<double>? location;
 
-  OrderedCustomer(
-      {this.customerName,
-        this.mobile,
-        this.email,
-        this.address,
-        this.city,
-        this.state,
-        this.pincode,
-        this.location});
+  OrderedCustomer({
+    this.customerName,
+    this.mobile,
+    this.email,
+    this.address,
+    this.city,
+    this.state,
+    this.pincode,
+    this.location,
+  });
 
   OrderedCustomer.fromJson(Map<String, dynamic> json) {
     customerName = json['customer_name'];

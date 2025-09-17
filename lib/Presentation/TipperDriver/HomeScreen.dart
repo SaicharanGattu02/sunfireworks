@@ -121,7 +121,7 @@ class _HomescreenState extends State<HomeScreen> {
               );
             }
 
-            final results = model?.data?.results ?? const <Results>[];
+            final results = model?.data?.results ?? const <AssignmentResult>[];
 
             // ---- Empty state ----
             if (results.isEmpty) {
@@ -159,9 +159,7 @@ class _HomescreenState extends State<HomeScreen> {
                           child: Center(child: CircularProgressIndicator()),
                         );
                       }
-
                       final r = results[index];
-
                       // Compute UI values
                       final city =
                           r.wayPointName ?? (r.dcmAssignment?.warehouse ?? "—");
@@ -175,8 +173,8 @@ class _HomescreenState extends State<HomeScreen> {
                           index: index + 1,
                           city: city,
                           km: r.distance ?? 0,
-                          orderBoxes: r.boxes_count ?? 0,
-                          extraBoxes: r.extra_boxes_count ?? 0,
+                          orderBoxes: r.boxesCount ?? 0,
+                          extraBoxes: r.extraBoxesCount ?? 0,
                           status: status,
                           location: r.wayPoint ?? "",
                           context: context,

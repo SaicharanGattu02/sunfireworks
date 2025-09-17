@@ -4,12 +4,16 @@ import 'package:sunfireworks/data/bloc/cubits/TipperDriver/DriverAssignment/driv
 
 import '../../../../Models/TipperDriver/DriverAssignmentModel.dart';
 
+import 'package:flutter_bloc/flutter_bloc.dart';
+
+// Assuming you already have imports for DriverAssignmentRepo, DriverAssignmentStates, and the model classes
+
 class DriverAssignmentCubit extends Cubit<DriverAssignmentStates> {
   final DriverAssignmentRepo driverAssignmentRepo;
   DriverAssignmentCubit(this.driverAssignmentRepo)
       : super(DriverAssignmentInitially());
 
-  DriverAssignmentModel driverAssignmentModel = DriverAssignmentModel();
+  DriverAssignmentModel? driverAssignmentModel;
 
   int _currentPage = 1;
   bool _hasNextPage = true;
@@ -24,12 +28,12 @@ class DriverAssignmentCubit extends Cubit<DriverAssignmentStates> {
         _currentPage,
       );
 
-      if (response != null && response.success == true) {
+      if (response != null && response.success) {
         driverAssignmentModel = response;
         _hasNextPage = response.data?.nextPage != null;
-        emit(DriverAssignmentLoaded(driverAssignmentModel, _hasNextPage));
+        emit(DriverAssignmentLoaded(driverAssignmentModel!, _hasNextPage));
       } else {
-        emit(DriverAssignmentFailure(response?.message ?? ""));
+        emit(DriverAssignmentFailure(response?.message ?? "Something went wrong"));
       }
     } catch (e) {
       emit(DriverAssignmentFailure(e.toString()));
@@ -42,26 +46,28 @@ class DriverAssignmentCubit extends Cubit<DriverAssignmentStates> {
     _isLoadingMore = true;
     _currentPage++;
 
-    emit(DriverAssignmentLoadingMore(driverAssignmentModel, _hasNextPage));
+    if (driverAssignmentModel != null) {
+      emit(DriverAssignmentLoadingMore(driverAssignmentModel!, _hasNextPage));
+    }
 
     try {
       final newData = await driverAssignmentRepo.getDriverAssignments(
         _currentPage,
       );
 
-      if (newData != null && newData.data?.results?.isNotEmpty == true) {
+      if (newData != null && newData.data != null && newData.data!.results.isNotEmpty) {
         // Merge existing results + new results
-        final combinedResults = List<Results>.from(
-          driverAssignmentModel.data?.results ?? [],
-        )..addAll(newData.data!.results!);
+        final combinedResults = List<AssignmentResult>.from(
+          driverAssignmentModel?.data?.results ?? [],
+        )..addAll(newData.data!.results);
 
         // Create updated Data object
-        final updatedData = Data(
-          page: newData.data?.page,
-          nextPage: newData.data?.nextPage,
-          prevPage: newData.data?.prevPage,
-          count: newData.data?.count,
-          rowsPerPage: newData.data?.rowsPerPage,
+        final updatedData = AssignmentData(
+          page: newData.data!.page,
+          nextPage: newData.data!.nextPage,
+          prevPage: newData.data!.prevPage,
+          count: newData.data!.count,
+          rowsPerPage: newData.data!.rowsPerPage,
           results: combinedResults,
         );
 
@@ -72,7 +78,7 @@ class DriverAssignmentCubit extends Cubit<DriverAssignmentStates> {
         );
 
         _hasNextPage = newData.data?.nextPage != null;
-        emit(DriverAssignmentLoaded(driverAssignmentModel, _hasNextPage));
+        emit(DriverAssignmentLoaded(driverAssignmentModel!, _hasNextPage));
       }
     } catch (e) {
       emit(DriverAssignmentFailure(e.toString()));
@@ -81,4 +87,5 @@ class DriverAssignmentCubit extends Cubit<DriverAssignmentStates> {
     }
   }
 }
+
 

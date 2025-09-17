@@ -9,6 +9,8 @@ import 'package:sunfireworks/data/bloc/cubits/MiniTruckDriver/CustomerGenerateOT
 import 'package:sunfireworks/data/bloc/cubits/MiniTruckDriver/CustomerGenerateOTP/CustomerGenerateOtpRepo.dart';
 import 'package:sunfireworks/data/bloc/cubits/MiniTruckDriver/UpdateOrderStatus/UpdateOrderStatusCubit.dart';
 import 'package:sunfireworks/data/bloc/cubits/MiniTruckDriver/UpdateOrderStatus/UpdateOrderStatusRepo.dart';
+import 'package:sunfireworks/data/bloc/cubits/TipperDriver/CarDriverOTP/CarDriverOTPCubit.dart';
+import 'package:sunfireworks/data/bloc/cubits/TipperDriver/CarDriverOTP/CarDriverOTPRepo.dart';
 import 'package:sunfireworks/data/bloc/cubits/TipperDriver/DriverAssignment/driver_assignment_cubit.dart';
 import 'package:sunfireworks/data/bloc/cubits/TipperDriver/DriverAssignment/driver_assignment_repo.dart';
 import 'package:sunfireworks/data/bloc/cubits/TipperDriver/DriverDetails/DriverDetailsCubit.dart';
@@ -70,6 +72,11 @@ class StateInjector {
         remoteDataSource: context.read<RemoteDataSource>(),
       ),
     ),
+    RepositoryProvider<CarDriverOTPRepo>(
+      create: (context) => CarDriverOTPRepoImpl(
+        remoteDataSource: context.read<RemoteDataSource>(),
+      ),
+    ),
   ];
 
   static final blocProviders = <BlocProvider>[
@@ -101,6 +108,9 @@ class StateInjector {
     ),
     BlocProvider<UserDetailsCubit>(
       create: (context) => UserDetailsCubit(context.read<UserDetailsRepo>()),
+    ),
+    BlocProvider<CarDriverOTPCubit>(
+      create: (context) => CarDriverOTPCubit(context.read<CarDriverOTPRepo>()),
     ),
   ];
 }

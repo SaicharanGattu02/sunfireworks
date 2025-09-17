@@ -8,6 +8,7 @@ import 'Models/MiniTruckDriver/AssignedOrdersModel.dart';
 import 'Models/SuccessModel.dart';
 import 'Models/TipperDriver/DriverAssignmentModel.dart';
 import 'Models/TipperDriver/DriverDetailsModel.dart';
+import 'Models/TipperDriver/PolylineModel.dart';
 import 'Models/TipperDriver/WaypointWiseBoxesModel.dart';
 import 'Models/UserDetailsModel.dart';
 import 'Models/VerifyOTPModel.dart';
@@ -30,6 +31,10 @@ abstract class RemoteDataSource {
   );
   Future<SuccessModel?> generateOtp(Map<String, dynamic> data);
   Future<SuccessModel?> customerVerifyOtp(Map<String, dynamic> data);
+  Future<PolylineModel?> getCarPolyline();
+  Future<PolylineModel?> getDCMPolyline();
+  Future<SuccessModel?> generateCarDriverOTP(Map<String, dynamic> data);
+  Future<SuccessModel?> verifyCarDriverOTP(Map<String, dynamic> data);
 }
 
 class RemoteDataSourceImpl implements RemoteDataSource {
@@ -53,6 +58,66 @@ class RemoteDataSourceImpl implements RemoteDataSource {
     }
 
     return FormData.fromMap(formMap);
+  }
+
+  @override
+  Future<SuccessModel?> verifyCarDriverOTP(Map<String, dynamic> data) async {
+    try {
+      final formdata = await buildFormData(data);
+      Response response = await ApiClient.post(
+        "${APIEndpointUrls.car_verify_otp}",
+        data: formdata,
+      );
+      AppLogger.log('verifyCarDriverOTP:${response.data}');
+      return SuccessModel.fromJson(response.data);
+    } catch (e) {
+      AppLogger.error('verifyCarDriverOTP :: $e');
+      return null;
+    }
+  }
+
+  @override
+  Future<SuccessModel?> generateCarDriverOTP(Map<String, dynamic> data) async {
+    try {
+      final formdata = await buildFormData(data);
+      Response response = await ApiClient.post(
+        "${APIEndpointUrls.car_generate_otp}",
+        data: formdata,
+      );
+      AppLogger.log('generateCarDriverOTP:${response.data}');
+      return SuccessModel.fromJson(response.data);
+    } catch (e) {
+      AppLogger.error('generateCarDriverOTP :: $e');
+      return null;
+    }
+  }
+
+  @override
+  Future<PolylineModel?> getDCMPolyline() async {
+    try {
+      Response response = await ApiClient.get(
+        "${APIEndpointUrls.dcm_polyline}",
+      );
+      AppLogger.log('getDCMPolyline:${response.data}');
+      return PolylineModel.fromJson(response.data);
+    } catch (e) {
+      AppLogger.error('getDCMPolyline :: $e');
+      return null;
+    }
+  }
+
+  @override
+  Future<PolylineModel?> getCarPolyline() async {
+    try {
+      Response response = await ApiClient.get(
+        "${APIEndpointUrls.car_polyline}",
+      );
+      AppLogger.log('getCarPolyline:${response.data}');
+      return PolylineModel.fromJson(response.data);
+    } catch (e) {
+      AppLogger.error('getCarPolyline :: $e');
+      return null;
+    }
   }
 
   @override

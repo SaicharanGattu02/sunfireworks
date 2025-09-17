@@ -173,7 +173,9 @@ class _CustomerDeliveryScreenState extends State<CustomerDeliveryScreen> {
                         >(
                           listener: (context, state) {
                             if (state is UpdateOrderStatusUpdated) {
-                              context.read<AssignedOrdersCubit>().fetchAssignedOrders();
+                              context
+                                  .read<AssignedOrdersCubit>()
+                                  .fetchAssignedOrders();
                               CustomSnackBar1.show(
                                 context,
                                 state.successModel.message ?? "",

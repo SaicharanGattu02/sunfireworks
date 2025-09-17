@@ -21,7 +21,6 @@ class _DistributeLocationsScreenState extends State<DistributeLocationsScreen> {
   @override
   void initState() {
     super.initState();
-    // Load first page
     context.read<DriverAssignmentCubit>().getDriverAssignments();
   }
 
@@ -112,7 +111,6 @@ class _DistributeLocationsScreenState extends State<DistributeLocationsScreen> {
             return CustomScrollView(
               slivers: [
                 _targetHeader(context),
-
                 // Assigned cars list with pagination tail
                 SliverList.builder(
                   itemCount: cars.length + (hasNext ? 1 : 0),
@@ -127,16 +125,20 @@ class _DistributeLocationsScreenState extends State<DistributeLocationsScreen> {
                     final c = cars[index];
                     return _carCard(
                       index: index + 1,
-                      driverName: c.driverName,
-                      vehicleNumber: c.vehicleNumber,
+                      driverName: c.car?.driver ?? "",
+                      vehicleNumber: c.car?.vehicleNumber ?? "",
                       ordersCount: c.ordersCount,
                       status: c.status,
-                      onNav: () => context.push("/delivery_by_locations"),
+                      onNav: () => context.push(
+                        '/truck_delivery',
+                        extra: c, // ✅ your model object
+                      ),
                     );
                   },
                 ),
 
-                if (appending) const SliverToBoxAdapter(child: SizedBox(height: 8)),
+                if (appending)
+                  const SliverToBoxAdapter(child: SizedBox(height: 8)),
               ],
             );
           },
@@ -244,7 +246,10 @@ class _DistributeLocationsScreenState extends State<DistributeLocationsScreen> {
                     const SizedBox(width: 6),
                     Text(
                       vehicleNumber,
-                      style: const TextStyle(fontFamily: "roboto", fontSize: 14),
+                      style: const TextStyle(
+                        fontFamily: "roboto",
+                        fontSize: 14,
+                      ),
                     ),
                   ],
                 ),
@@ -279,7 +284,10 @@ class _DistributeLocationsScreenState extends State<DistributeLocationsScreen> {
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(8),
                   ),
-                  padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+                  padding: const EdgeInsets.symmetric(
+                    vertical: 8,
+                    horizontal: 12,
+                  ),
                 ),
                 icon: const Icon(Icons.navigation, size: 16),
                 label: const Text(
@@ -297,38 +305,14 @@ class _DistributeLocationsScreenState extends State<DistributeLocationsScreen> {
 
 // ---------- Helpers: flatten + map assigned_cars safely ----------
 
-class _AssignedCarView {
-  final String driverName;
-  final String vehicleNumber;
-  final int ordersCount;
-  final int radius;
-  final String status;
-
-  _AssignedCarView({
-    required this.driverName,
-    required this.vehicleNumber,
-    required this.ordersCount,
-    required this.radius,
-    required this.status,
-  });
-}
-
-List<_AssignedCarView> _flattenAssignedCars(DriverAssignmentModel? model) {
-  final out = <_AssignedCarView>[];
-  final results = model?.data?.results ?? const <Results>[];
+List<AssignedCar> _flattenAssignedCars(DriverAssignmentModel? model) {
+  final out = <AssignedCar>[];
+  final results = model?.data?.results ?? const <AssignmentResult>[];
 
   for (final r in results) {
     final list = r.assignedCars; // List<AssignedCars>?
-    if (list == null || list.isEmpty) continue;
-
-    for (final item in list) {
-      out.add(_AssignedCarView(
-        driverName: item.car?.driver ?? '—',
-        vehicleNumber: item.car?.vehicleNumber ?? '—',
-        ordersCount: item.ordersCount ?? 0,
-        radius: item.radius ?? 0,
-        status: item.status ?? '—',
-      ));
+    if (list != null && list.isNotEmpty) {
+      out.addAll(list);
     }
   }
   return out;
@@ -356,7 +340,11 @@ class _ErrorView extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text(message, textAlign: TextAlign.center, style: const TextStyle(color: Colors.red)),
+            Text(
+              message,
+              textAlign: TextAlign.center,
+              style: const TextStyle(color: Colors.red),
+            ),
             const SizedBox(height: 12),
             ElevatedButton(onPressed: onRetry, child: const Text("Retry")),
           ],
@@ -365,4 +353,3 @@ class _ErrorView extends StatelessWidget {
     );
   }
 }
-
