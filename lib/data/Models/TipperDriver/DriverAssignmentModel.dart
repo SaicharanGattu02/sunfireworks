@@ -214,9 +214,9 @@ class AssignedCar {
       status: json['status'] ?? '',
       car: json['car'] != null ? Car.fromJson(json['car']) : null,
       individualStockDetails:
-      (json['individual_stock_details'] as List<dynamic>? ?? [])
-          .map((e) => IndividualStockDetail.fromJson(e))
-          .toList(),
+          (json['individual_stock_details'] as List<dynamic>? ?? [])
+              .map((e) => IndividualStockDetail.fromJson(e))
+              .toList(),
       comboStockDetails: (json['combo_stock_details'] as List<dynamic>? ?? [])
           .map((e) => ComboStockDetail.fromJson(e))
           .toList(),
@@ -231,11 +231,13 @@ class Car {
   final String carId;
   final String vehicleNumber;
   final String driver;
+  final String driver_mobile_no;
 
   Car({
     required this.carId,
     required this.vehicleNumber,
     required this.driver,
+    required this.driver_mobile_no,
   });
 
   factory Car.fromJson(Map<String, dynamic> json) {
@@ -243,6 +245,7 @@ class Car {
       carId: json['car_id'] ?? '',
       vehicleNumber: json['vehicle_number'] ?? '',
       driver: json['driver'] ?? '',
+      driver_mobile_no: json['driver_mobile_no'] ?? '',
     );
   }
 }

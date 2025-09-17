@@ -126,7 +126,10 @@ class _MiniTruckDeliveryScreenState extends State<MiniTruckDeliveryScreen> {
           SliverToBoxAdapter(
             child: Padding(
               padding: const EdgeInsets.all(16),
-              child: _otpSection(orderId: assignedCar.id ?? ''),
+              child: _otpSection(
+                orderId: assignedCar.id ?? '',
+                mobile: assignedCar.car?.driver_mobile_no ?? '',
+              ),
             ),
           ),
 
@@ -267,7 +270,7 @@ class _MiniTruckDeliveryScreenState extends State<MiniTruckDeliveryScreen> {
   }
 
   // ========== OTP Section ==========
-  Widget _otpSection({required String orderId}) {
+  Widget _otpSection({required String orderId, required String mobile}) {
     return BlocConsumer<CarDriverOTPCubit, CarDriverOTPStates>(
       listener: (context, state) {
         if (state is CarDriverOTPGenerated) {
@@ -321,7 +324,7 @@ class _MiniTruckDeliveryScreenState extends State<MiniTruckDeliveryScreen> {
                     ? null
                     : () {
                         context.read<CarDriverOTPCubit>().verifyOTP({
-                          "mobile": "",
+                          "mobile": mobile,
                           "otp": _otpController.text,
                         });
                       },
