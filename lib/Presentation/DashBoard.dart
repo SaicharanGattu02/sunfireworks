@@ -43,8 +43,6 @@ class _DashboardState extends State<Dashboard> {
     }
   }
 
-
-
   void onItemTapped(int selectedItems) {
     pageController.jumpToPage(selectedItems);
     setState(() {
@@ -77,8 +75,7 @@ class _DashboardState extends State<Dashboard> {
               listener: (context, state) {
                 if (state is InternetStatusLostState) {
                   context.push('/no_internet');
-                } else if (state is InternetStatusBackState) {
-                }
+                } else if (state is InternetStatusBackState) {}
               },
               child: PageView(
                 onPageChanged: (value) {
@@ -89,9 +86,7 @@ class _DashboardState extends State<Dashboard> {
                 },
                 controller: pageController,
                 children: [
-                  role == "dcm_driver"
-                      ? HomeScreen()
-                      : CustomerLocations(),
+                  role == "dcm_driver" ? HomeScreen() : CustomerLocations(),
                   // OrdersScreen(),
                   DriverProfileScreen(),
                 ],
