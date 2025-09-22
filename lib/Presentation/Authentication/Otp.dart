@@ -1,3 +1,4 @@
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -138,7 +139,7 @@ class _OtpState extends State<Otp> {
               return CustomAppButton1(
                 text: 'Next',
                 isLoading: isLoading,
-                onPlusTap: () {
+                onPlusTap: () async {
                   if (_formKey.currentState?.validate() ?? false) {
                     if (otpController.text.trim().length != 6) {
                       setState(() {
@@ -148,11 +149,13 @@ class _OtpState extends State<Otp> {
                       setState(() {
                         _showOtpError = false;
                       });
+                      FirebaseMessaging messaging = FirebaseMessaging.instance;
+                      String? fcmToken = await messaging.getToken();
 
                       Map<String, dynamic> data = {
                         "mobile": widget.mobile_number,
                         "otp": otpController.text,
-                        "fcm_token": 'kgiergkrgngkjsegnlksdjgn',
+                        "fcm_token": fcmToken,
                         "token_type": "android_token",
                       };
                       context.read<AuthCubit>().verifyOTP(data);

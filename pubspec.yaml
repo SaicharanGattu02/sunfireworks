@@ -59,6 +59,9 @@ dependencies:
   shared_preferences: ^2.5.3
   location: ^8.0.1
   qr_code_scanner_plus: ^2.0.10+1
+  firebase_core: ^4.1.0
+  firebase_messaging: ^16.0.1
+  flutter_local_notifications: ^19.3.1
 
 
 

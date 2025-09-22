@@ -1,17 +1,19 @@
 plugins {
     id("com.android.application")
+    id("com.google.gms.google-services")
     id("org.jetbrains.kotlin.android")
     id("dev.flutter.flutter-gradle-plugin")
 }
 
 android {
-    namespace = "com.example.sunfireworks"
+    namespace = "com.crackersworld.android"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = "27.0.12077973"
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
+        isCoreLibraryDesugaringEnabled = true
     }
 
     kotlinOptions {
@@ -28,8 +30,8 @@ android {
     }
 
     defaultConfig {
-        applicationId = "com.example.sunfireworks"
-        minSdk = flutter.minSdkVersion
+        applicationId = "com.crackersworld.android"
+        minSdkVersion(23) // Correct function syntax
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
@@ -66,9 +68,8 @@ dependencies {
 
     // Android KTX (handy extensions, recommended)
     implementation("androidx.core:core-ktx:1.13.1")
+    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.4")
 }
-
-
 
 flutter {
     source = "../.."

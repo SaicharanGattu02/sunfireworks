@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "221408294088",
+    "project_id": "crackers-world",
+    "storage_bucket": "crackers-world.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:221408294088:android:1473013f1ed44f943021fd",
+        "android_client_info": {
+          "package_name": "com.crackersworld.android"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCtjbKybgpVIRiD02HbfPIHhwYppSU9Lpg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
