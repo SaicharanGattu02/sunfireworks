@@ -1,6 +1,6 @@
 class APIEndpointUrls {
-  static const String baseUrl = 'http://192.168.80.115:8090/';
-  // static const String baseUrl = 'https://sunfirework.ozrit.in/';
+  // static const String baseUrl = 'http://192.168.80.115:8090/';
+  static const String baseUrl = 'https://api.crackersworld.online/';
   static const String apiUrl = 'api/';
   static const String authUrl = 'auth/';
   static const String driverUrl = 'driver/';
@@ -15,8 +15,7 @@ class APIEndpointUrls {
   static const String dcm_polyline = '${driverUrl}dcm-polyline/';
   static const String car_polyline = '${driverUrl}car-polyline/';
   static const String driver_assignment = '${driverUrl}driver-assignment/';
-  static const String dcm_waypoint_wiseboxes =
-      '${driverUrl}dcm-waypoint-wiseboxes';
+  static const String dcm_waypoint_wiseboxes = '${driverUrl}dcm-waypoint-wiseboxes';
   static const String driver_details = '${driverUrl}driver-details/';
   static const String assigned_car_orders = '${driverUrl}assigned-car-orders/';
   static const String assigned_order_detail =

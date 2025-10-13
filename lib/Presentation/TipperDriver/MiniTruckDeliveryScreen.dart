@@ -5,17 +5,17 @@ import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:pin_code_fields/pin_code_fields.dart';
+import 'package:sunfireworks/Components/CustomAppButton.dart';
 import 'package:sunfireworks/data/bloc/cubits/TipperDriver/CarDriverOTP/CarDriverOTPStates.dart';
 
 import '../../Components/CustomSnackBar.dart';
 import '../../data/Models/TipperDriver/DriverAssignmentModel.dart';
 import '../../data/bloc/cubits/TipperDriver/CarDriverOTP/CarDriverOTPCubit.dart';
+import '../QrScannerScreen.dart';
 
 class MiniTruckDeliveryScreen extends StatefulWidget {
   final AssignedCar assignedCar;
-
   const MiniTruckDeliveryScreen({super.key, required this.assignedCar});
-
   @override
   State<MiniTruckDeliveryScreen> createState() =>
       _MiniTruckDeliveryScreenState();
@@ -24,6 +24,7 @@ class MiniTruckDeliveryScreen extends StatefulWidget {
 class _MiniTruckDeliveryScreenState extends State<MiniTruckDeliveryScreen> {
   final ImagePicker _picker = ImagePicker();
   File? _photoFile;
+  late List<bool> _bagsDelivered;
 
   // OTP
   final TextEditingController _otpController = TextEditingController();
@@ -33,6 +34,57 @@ class _MiniTruckDeliveryScreenState extends State<MiniTruckDeliveryScreen> {
   // UI state
   bool _verifying = false;
   bool _generatingOtp = false;
+
+  // ✅ Helper getter to check if all bags are delivered
+  bool get allBagsDelivered => _bagsDelivered.every((delivered) => delivered);
+
+  @override
+  void initState() {
+    super.initState();
+    _bagsDelivered = List.generate(
+      widget.assignedCar.bags.length,
+      (_) => false,
+    );
+  }
+
+  Future<void> _handleScannedCode(String scannedData) async {
+    // Extract the bag code from the scanned string
+    // Assuming format always starts with "Bag Code: <code>"
+    final codePrefix = "Bag Code: ";
+    String scannedCode = "";
+
+    if (scannedData.startsWith(codePrefix)) {
+      final endIndex = scannedData.indexOf(" |");
+      if (endIndex != -1) {
+        scannedCode = scannedData.substring(codePrefix.length, endIndex).trim();
+      } else {
+        scannedCode = scannedData.substring(codePrefix.length).trim();
+      }
+    } else {
+      scannedCode = scannedData.trim();
+    }
+
+    final bags = widget.assignedCar.bags;
+    bool found = false;
+
+    for (int i = 0; i < bags.length; i++) {
+      if (bags[i].code == scannedCode) {
+        setState(() => _bagsDelivered[i] = true);
+        found = true;
+        break;
+      }
+    }
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          found
+              ? "Bag $scannedCode marked delivered ✅"
+              : "Bag $scannedCode not in assigned list ❌",
+        ),
+      ),
+    );
+  }
 
   @override
   void dispose() {
@@ -66,6 +118,7 @@ class _MiniTruckDeliveryScreenState extends State<MiniTruckDeliveryScreen> {
       0,
       (sum, e) => sum + e.stockRequired,
     );
+
     int totalBoxes = totalIndividualBoxes + totalComboBoxes;
 
     return Scaffold(
@@ -87,59 +140,90 @@ class _MiniTruckDeliveryScreenState extends State<MiniTruckDeliveryScreen> {
             color: Colors.black,
           ),
         ),
+        actions: [
+          IconButton(
+            onPressed: () async {
+              final scannedCode = await Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const QrScannerScreen()),
+              );
+              print("scannedCode:${scannedCode}");
+              if (scannedCode != null) {
+                _handleScannedCode(scannedCode);
+              }
+            },
+            icon: Icon(Icons.qr_code, color: Colors.black),
+          ),
+        ],
       ),
       body: CustomScrollView(
         slivers: [
           // Transport Card
           SliverToBoxAdapter(child: _transportCard(assignedCar)),
 
-          // Individual Stock Card
           if (assignedCar.individualStockDetails.isNotEmpty)
             SliverToBoxAdapter(
               child: _summaryCard(
-                title: "Individual Stock",
-                total: totalIndividualBoxes.toString(),
+                title: "Bags To Delivery",
+                total: assignedCar.bags.length.toString(),
                 amount: "—",
-                items: assignedCar.individualStockDetails
-                    .map((e) => _boxTile(e.individualName, e.stockRequired))
-                    .toList(),
-                footer: "Total: $totalIndividualBoxes boxes",
+                items: List.generate(
+                  assignedCar.bags.length,
+                  (index) => _boxTile1(index, assignedCar.bags[index].code),
+                ),
+                footer: "Total: ${assignedCar.bags.length} boxes",
               ),
             ),
-
-          // Combo Stock Card
-          if (assignedCar.comboStockDetails.isNotEmpty)
-            SliverToBoxAdapter(
-              child: _summaryCard(
-                title: "Combo Stock",
-                total: totalComboBoxes.toString(),
-                amount: "—",
-                items: assignedCar.comboStockDetails
-                    .map((e) => _boxTile(e.comboName, e.stockRequired))
-                    .toList(),
-                footer: "Total: $totalComboBoxes boxes",
-                bgColor: Colors.red.shade50,
-              ),
-            ),
+          //
+          // // Individual Stock Card
+          // if (assignedCar.individualStockDetails.isNotEmpty)
+          //   SliverToBoxAdapter(
+          //     child: _summaryCard(
+          //       title: "Individual Stock",
+          //       total: totalIndividualBoxes.toString(),
+          //       amount: "—",
+          //       items: assignedCar.individualStockDetails
+          //           .map((e) => _boxTile(e.individualName, e.stockRequired))
+          //           .toList(),
+          //       footer: "Total: $totalIndividualBoxes boxes",
+          //     ),
+          //   ),
+          //
+          // // Combo Stock Card
+          // if (assignedCar.comboStockDetails.isNotEmpty)
+          //   SliverToBoxAdapter(
+          //     child: _summaryCard(
+          //       title: "Combo Stock",
+          //       total: totalComboBoxes.toString(),
+          //       amount: "—",
+          //       items: assignedCar.comboStockDetails
+          //           .map((e) => _boxTile(e.comboName, e.stockRequired))
+          //           .toList(),
+          //       footer: "Total: $totalComboBoxes boxes",
+          //       bgColor: Colors.red.shade50,
+          //     ),
+          //   ),
 
           // OTP Section
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: _otpSection(
-                orderId: assignedCar.id ?? '',
-                mobile: assignedCar.car?.driver_mobile_no ?? '',
+          if (allBagsDelivered)
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: _otpSection(
+                  orderId: assignedCar.id ?? '',
+                  mobile: assignedCar.car?.mobile ?? '',
+                ),
               ),
             ),
-          ),
 
           // Photo Section
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: _photoSection(),
-            ),
-          ),
+          // if (allBagsDelivered)
+          //   SliverToBoxAdapter(
+          //     child: Padding(
+          //       padding: const EdgeInsets.all(16),
+          //       child: _photoSection(),
+          //     ),
+          //   ),
 
           // Submit Button
           // SliverToBoxAdapter(
@@ -297,8 +381,10 @@ class _MiniTruckDeliveryScreenState extends State<MiniTruckDeliveryScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             if (!_otpSent)
-              ElevatedButton(
-                onPressed: _generatingOtp
+              CustomAppButton1(
+                text: "Generate OTP",
+                isLoading: state is CarDriverOTPLoading,
+                onPlusTap: _generatingOtp
                     ? null
                     : () {
                         setState(() => _generatingOtp = true);
@@ -306,40 +392,56 @@ class _MiniTruckDeliveryScreenState extends State<MiniTruckDeliveryScreen> {
                           "car_assignment_id": orderId,
                         });
                       },
-                child: state is CarDriverOTPLoading
-                    ? const CircularProgressIndicator()
-                    : const Text("Generate OTP"),
               ),
             if (_otpSent) ...[
               PinCodeTextField(
                 appContext: context,
-                controller: _otpController,
                 length: 6,
+                controller: _otpController,
                 autoFocus: true,
                 keyboardType: TextInputType.number,
-                onChanged: (_) {},
+                animationType: AnimationType.fade,
+                animationDuration: const Duration(milliseconds: 300),
+                backgroundColor: Colors.transparent,
+                enableActiveFill: true,
+                pinTheme: PinTheme(
+                  shape: PinCodeFieldShape.box,
+                  borderRadius: BorderRadius.circular(8),
+                  fieldHeight: 50,
+                  fieldWidth: 50,
+                  activeColor: Color(0xffE9E9E9),
+                  inactiveColor: Color(0xffE9E9E9),
+                  selectedColor: Color(0xffE9E9E9),
+                  activeFillColor: Color(0xffE9E9E9),
+                  inactiveFillColor: Color(0xffE9E9E9),
+                  selectedFillColor: Color(0xffE9E9E9),
+                ),
               ),
-              ElevatedButton(
-                onPressed: state is CarDriverOTPLoading
+              CustomAppButton1(
+                text: "Verify OTP",
+                isLoading: state is CarDriverOTPLoading,
+                onPlusTap: state is CarDriverOTPLoading
                     ? null
                     : () {
-                        context.read<CarDriverOTPCubit>().verifyOTP({
-                          "mobile": mobile,
-                          "otp": _otpController.text,
-                        });
-                      },
-                child: const Text("Verify OTP"),
+                  context.read<CarDriverOTPCubit>().verifyOTP({
+                    "mobile": mobile,
+                    "otp": _otpController.text,
+                  });
+                },
               ),
-              TextButton(
-                onPressed: _generatingOtp
-                    ? null
-                    : () {
-                        setState(() => _generatingOtp = true);
-                        context.read<CarDriverOTPCubit>().generateOTP({
-                          "order_id": orderId,
-                        });
-                      },
-                child: const Text("Resend OTP"),
+              Align(
+                alignment: Alignment.bottomRight,
+                child: TextButton(
+                  onPressed: _generatingOtp
+                      ? null
+                      : () {
+                          setState(() => _generatingOtp = true);
+                          context.read<CarDriverOTPCubit>().generateOTP({
+                            "order_id": orderId,
+                          });
+                        },
+                  child: const Text("Resend OTP"),
+                ),
               ),
             ],
           ],
@@ -422,7 +524,7 @@ class _MiniTruckDeliveryScreenState extends State<MiniTruckDeliveryScreen> {
                 ),
               ),
               Text(
-                "Total: $total\n$amount",
+                "Total: $total",
                 textAlign: TextAlign.right,
                 style: const TextStyle(
                   fontSize: 14,
@@ -445,6 +547,30 @@ class _MiniTruckDeliveryScreenState extends State<MiniTruckDeliveryScreen> {
               ),
               child: Text(footer, textAlign: TextAlign.center),
             ),
+        ],
+      ),
+    );
+  }
+
+  Widget _boxTile1(int index, String label) {
+    final delivered = _bagsDelivered[index];
+    return Container(
+      width: 100,
+      height: 100,
+      padding: const EdgeInsets.all(10),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(
+          color: delivered ? Colors.green : Colors.grey.shade300,
+          width: 2,
+        ),
+      ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Text(label, textAlign: TextAlign.center),
+          if (delivered) const Icon(Icons.check_circle, color: Colors.green),
         ],
       ),
     );

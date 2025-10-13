@@ -7,6 +7,7 @@ import 'package:sunfireworks/data/bloc/cubits/TipperDriver/DriverAssignment/driv
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../data/Models/TipperDriver/DriverAssignmentModel.dart';
 import '../../data/bloc/cubits/TipperDriver/DriverAssignment/driver_assignment_states.dart';
@@ -193,6 +194,16 @@ class _HomescreenState extends State<HomeScreen> {
       ),
     );
   }
+
+  Future<void> _openGoogleMaps(double lat, double lng) async {
+    final Uri googleMapsUrl = Uri.parse("https://www.google.com/maps/search/?api=1&query=$lat,$lng");
+    if (await canLaunchUrl(googleMapsUrl)) {
+      await launchUrl(googleMapsUrl, mode: LaunchMode.externalApplication);
+    } else {
+      throw 'Could not launch Google Maps';
+    }
+  }
+
 
   /// Pagination trigger on scroll
   bool _onScroll(ScrollNotification notification) {
@@ -448,8 +459,7 @@ class _HomescreenState extends State<HomeScreen> {
               const SizedBox(height: 10),
               ElevatedButton.icon(
                 onPressed: () {
-                  // context.push("/map_screen?location=${location}");
-                  _startLocationService();
+                  _openGoogleMaps(17.3850, 78.4867); // Example: Hyderabad
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.red,

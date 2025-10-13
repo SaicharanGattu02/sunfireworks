@@ -17,6 +17,7 @@ import '../../data/Models/MiniTruckDriver/AssignedOrdersDetailsModel.dart';
 import '../../data/bloc/cubits/MiniTruckDriver/AssignedOrders/AssignedOrdersCubit.dart';
 import '../../data/bloc/cubits/MiniTruckDriver/AssignedOrdersDetails/AssignedOrdersDetailsStates.dart';
 import '../../data/bloc/cubits/MiniTruckDriver/CustomerGenerateOTP/CustomerGenerateOtpCubit.dart';
+import '../QrScannerScreen.dart';
 
 class CustomerDeliveryScreen extends StatefulWidget {
   final String order_id;
@@ -248,13 +249,14 @@ class _CustomerDeliveryScreenState extends State<CustomerDeliveryScreen> {
       child: SafeArea(
         bottom: false,
         child: Stack(
-          children: const [
+          children: [
             Positioned(
               left: 8,
               top: 8,
               bottom: 8,
               child: BackButton(color: Colors.white),
             ),
+
             Center(
               child: Text(
                 'Delivery Details',
@@ -284,6 +286,27 @@ class _CustomerDeliveryScreenState extends State<CustomerDeliveryScreen> {
         'Delivery Details',
         style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
       ),
+      actions: [
+        IconButton(
+          onPressed: () async {
+            final scannedCode = await Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const QrScannerScreen()),
+            );
+
+            if (scannedCode != null) {
+              // Handle scanned product code
+              print("Scanned Product: $scannedCode");
+
+              // Example: Navigate to product details screen or update a field
+              // Navigator.push(context, MaterialPageRoute(
+              //   builder: (_) => ProductDetailsScreen(productId: scannedCode),
+              // ));
+            }
+          },
+          icon: Icon(Icons.qr_code, color: Colors.white),
+        ),
+      ],
       flexibleSpace: Container(
         decoration: const BoxDecoration(
           gradient: LinearGradient(

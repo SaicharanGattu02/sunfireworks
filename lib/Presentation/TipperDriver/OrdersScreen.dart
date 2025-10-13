@@ -39,7 +39,6 @@ class _OrdersScreenState extends State<OrdersScreen> {
               ),
               actions: [],
             ),
-
             // Toggle Buttons (Assigned / Pending)
             SliverPersistentHeader(
               pinned: true,
@@ -59,7 +58,6 @@ class _OrdersScreenState extends State<OrdersScreen> {
                 ),
               ),
             ),
-
             // Orders List
             SliverList(
               delegate: SliverChildBuilderDelegate(

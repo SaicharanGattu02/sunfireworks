@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../data/Models/TipperDriver/DriverAssignmentModel.dart';
 import '../../data/bloc/cubits/TipperDriver/DriverAssignment/driver_assignment_cubit.dart';
@@ -129,10 +130,15 @@ class _DistributeLocationsScreenState extends State<DistributeLocationsScreen> {
                       vehicleNumber: c.car?.vehicleNumber ?? "",
                       ordersCount: c.ordersCount,
                       status: c.status,
-                      onNav: () => context.push(
-                        '/truck_delivery',
-                        extra: c, // ✅ your model object
-                      ),
+                      onTap: (){
+                        context.push(
+                          '/truck_delivery',
+                          extra: c, // ✅ your model object
+                        );
+                      },
+                      onNav: (){
+                        _openGoogleMaps(17.3850, 78.4867); // Example: Hyderabad
+                      }
                     );
                   },
                 ),
@@ -145,6 +151,16 @@ class _DistributeLocationsScreenState extends State<DistributeLocationsScreen> {
         ),
       ),
     );
+  }
+
+  Future<void> _openGoogleMaps(double lat, double lng) async {
+    final Uri googleMapsUrl = Uri.parse("https://www.google.com/maps/search/?api=1&query=$lat,$lng");
+
+    if (await canLaunchUrl(googleMapsUrl)) {
+      await launchUrl(googleMapsUrl, mode: LaunchMode.externalApplication);
+    } else {
+      throw 'Could not launch Google Maps';
+    }
   }
 
   // ---------- UI pieces ----------
@@ -184,120 +200,124 @@ class _DistributeLocationsScreenState extends State<DistributeLocationsScreen> {
     required int ordersCount,
     required String status,
     required VoidCallback onNav,
+    required VoidCallback onTap,
   }) {
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.shade200,
-            blurRadius: 6,
-            offset: const Offset(0, 3),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          // Left avatar + index
-          Column(
-            children: [
-              CircleAvatar(
-                radius: 24,
-                backgroundColor: Colors.red.shade100,
-                child: const Icon(Icons.local_shipping, color: Colors.red),
-              ),
-              const SizedBox(height: 8),
-              CircleAvatar(
-                radius: 14,
-                backgroundColor: Colors.red.shade200,
-                child: Text(
-                  "$index",
-                  style: const TextStyle(
-                    fontFamily: "roboto",
-                    fontSize: 13,
-                    color: Colors.white,
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(width: 16),
-
-          // Details
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.grey.shade200,
+              blurRadius: 6,
+              offset: const Offset(0, 3),
+            ),
+          ],
+        ),
+        child: Row(
+          children: [
+            // Left avatar + index
+            Column(
               children: [
-                Text(
-                  driverName,
-                  style: const TextStyle(
-                    fontFamily: "roboto",
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
+                CircleAvatar(
+                  radius: 24,
+                  backgroundColor: Colors.red.shade100,
+                  child: const Icon(Icons.local_shipping, color: Colors.red),
+                ),
+                const SizedBox(height: 8),
+                // CircleAvatar(
+                //   radius: 14,
+                //   backgroundColor: Colors.red.shade200,
+                //   child: Text(
+                //     "$index",
+                //     style: const TextStyle(
+                //       fontFamily: "roboto",
+                //       fontSize: 13,
+                //       color: Colors.white,
+                //     ),
+                //   ),
+                // ),
+              ],
+            ),
+            const SizedBox(width: 16),
+
+            // Details
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    driverName,
+                    style: const TextStyle(
+                      fontFamily: "roboto",
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
-                ),
-                const SizedBox(height: 4),
-                Row(
-                  children: [
-                    const Icon(Icons.directions_car, size: 16),
-                    const SizedBox(width: 6),
-                    Text(
-                      vehicleNumber,
-                      style: const TextStyle(
-                        fontFamily: "roboto",
-                        fontSize: 14,
+                  const SizedBox(height: 4),
+                  Row(
+                    children: [
+                      const Icon(Icons.directions_car, size: 16),
+                      const SizedBox(width: 6),
+                      Text(
+                        vehicleNumber,
+                        style: const TextStyle(
+                          fontFamily: "roboto",
+                          fontSize: 14,
+                        ),
                       ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 6),
-                Row(
-                  children: [
-                    Icon(Icons.circle, size: 10, color: _statusColor(status)),
-                    const SizedBox(width: 6),
-                    Text(
-                      status,
-                      style: TextStyle(
-                        fontFamily: "roboto",
-                        fontSize: 14,
-                        color: _statusColor(status),
-                        fontWeight: FontWeight.w500,
+                    ],
+                  ),
+                  const SizedBox(height: 6),
+                  Row(
+                    children: [
+                      Icon(Icons.circle, size: 10, color: _statusColor(status)),
+                      const SizedBox(width: 6),
+                      Text(
+                        status,
+                        style: TextStyle(
+                          fontFamily: "roboto",
+                          fontSize: 14,
+                          color: _statusColor(status),
+                          fontWeight: FontWeight.w500,
+                        ),
                       ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+
+            // Right action
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                ElevatedButton.icon(
+                  onPressed: onNav,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.red,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
                     ),
-                  ],
+                    padding: const EdgeInsets.symmetric(
+                      vertical: 8,
+                      horizontal: 12,
+                    ),
+                  ),
+                  icon: const Icon(Icons.navigation, size: 16),
+                  label: const Text(
+                    "Navigate",
+                    style: TextStyle(fontFamily: "roboto", fontSize: 13),
+                  ),
                 ),
               ],
             ),
-          ),
-
-          // Right action
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              ElevatedButton.icon(
-                onPressed: onNav,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.red,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  padding: const EdgeInsets.symmetric(
-                    vertical: 8,
-                    horizontal: 12,
-                  ),
-                ),
-                icon: const Icon(Icons.navigation, size: 16),
-                label: const Text(
-                  "Navigate",
-                  style: TextStyle(fontFamily: "roboto", fontSize: 13),
-                ),
-              ),
-            ],
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

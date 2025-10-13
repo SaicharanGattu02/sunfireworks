@@ -52,7 +52,7 @@ class AssignmentData {
 class AssignmentResult {
   final String id;
   final DcmAssignment? dcmAssignment;
-  final List<dynamic> bags;
+  final List<Bag> bags;
   final List<dynamic> individualItems;
   final List<ComboItem> comboItems;
   final String? wayPoint;
@@ -96,7 +96,9 @@ class AssignmentResult {
       dcmAssignment: json['dcm_assignment'] != null
           ? DcmAssignment.fromJson(json['dcm_assignment'])
           : null,
-      bags: json['bags'] ?? [],
+      bags: (json['bags'] as List<dynamic>? ?? [])
+          .map((e) => Bag.fromJson(e))
+          .toList(),
       individualItems: json['individual_items'] ?? [],
       comboItems: (json['combo_items'] as List<dynamic>? ?? [])
           .map((e) => ComboItem.fromJson(e))
@@ -149,6 +151,32 @@ class DcmAssignment {
   }
 }
 
+class Bag {
+  final String id;
+  final String code;
+  final String qrCode;
+  final List<dynamic> individualItems;
+  final List<dynamic> comboItems;
+
+  Bag({
+    required this.id,
+    required this.code,
+    required this.qrCode,
+    required this.individualItems,
+    required this.comboItems,
+  });
+
+  factory Bag.fromJson(Map<String, dynamic> json) {
+    return Bag(
+      id: json['id'] ?? '',
+      code: json['code'] ?? '',
+      qrCode: json['qr_code'] ?? '',
+      individualItems: json['individual_items'] ?? [],
+      comboItems: json['combo_items'] ?? [],
+    );
+  }
+}
+
 class ComboItem {
   final String id;
   final String combo;
@@ -177,15 +205,18 @@ class AssignedCar {
   final String carLocation;
   final int ordersCount;
   final int? radius;
-  final String startDateTime;
-  final String endDateTime;
+  final DateTime startDateTime;
+  final DateTime endDateTime;
   final String status;
   final Car? car;
   final List<IndividualStockDetail> individualStockDetails;
   final List<ComboStockDetail> comboStockDetails;
   final String selectedPoint;
   final String createdAt;
+  final List<Bag> bags;
   final List<dynamic> packStockDetails;
+  final List<dynamic> extraBags;
+  final List<dynamic> extraPackItems;
 
   AssignedCar({
     required this.id,
@@ -200,7 +231,10 @@ class AssignedCar {
     required this.comboStockDetails,
     required this.selectedPoint,
     required this.createdAt,
+    required this.bags,
     required this.packStockDetails,
+    required this.extraBags,
+    required this.extraPackItems,
   });
 
   factory AssignedCar.fromJson(Map<String, dynamic> json) {
@@ -209,20 +243,25 @@ class AssignedCar {
       carLocation: json['car_location'] ?? '',
       ordersCount: json['orders_count'] ?? 0,
       radius: json['radius'],
-      startDateTime: json['start_date_time'] ?? '',
-      endDateTime: json['end_date_time'] ?? '',
+      startDateTime: DateTime.parse(json['start_date_time']),
+      endDateTime: DateTime.parse(json['end_date_time']),
       status: json['status'] ?? '',
       car: json['car'] != null ? Car.fromJson(json['car']) : null,
       individualStockDetails:
-          (json['individual_stock_details'] as List<dynamic>? ?? [])
-              .map((e) => IndividualStockDetail.fromJson(e))
-              .toList(),
+      (json['individual_stock_details'] as List<dynamic>? ?? [])
+          .map((e) => IndividualStockDetail.fromJson(e))
+          .toList(),
       comboStockDetails: (json['combo_stock_details'] as List<dynamic>? ?? [])
           .map((e) => ComboStockDetail.fromJson(e))
           .toList(),
       selectedPoint: json['selected_point'] ?? '',
       createdAt: json['created_at'] ?? '',
+      bags: (json['bags'] as List<dynamic>? ?? [])
+          .map((e) => Bag.fromJson(e))
+          .toList(),
       packStockDetails: json['pack_stock_details'] ?? [],
+      extraBags: json['extra_bags'] ?? [],
+      extraPackItems: json['extra_pack_items'] ?? [],
     );
   }
 }
@@ -231,13 +270,13 @@ class Car {
   final String carId;
   final String vehicleNumber;
   final String driver;
-  final String driver_mobile_no;
+  final String mobile;
 
   Car({
     required this.carId,
     required this.vehicleNumber,
     required this.driver,
-    required this.driver_mobile_no,
+    required this.mobile,
   });
 
   factory Car.fromJson(Map<String, dynamic> json) {
@@ -245,7 +284,7 @@ class Car {
       carId: json['car_id'] ?? '',
       vehicleNumber: json['vehicle_number'] ?? '',
       driver: json['driver'] ?? '',
-      driver_mobile_no: json['driver_mobile_no'] ?? '',
+      mobile: json['mobile'] ?? '',
     );
   }
 }

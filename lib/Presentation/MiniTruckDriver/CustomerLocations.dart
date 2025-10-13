@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:sunfireworks/data/bloc/cubits/UserDetails/UserDetailsCubit.dart';
 import 'package:sunfireworks/data/bloc/cubits/UserDetails/UserDetailsStates.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../data/Models/MiniTruckDriver/AssignedOrdersModel.dart';
 import '../../data/bloc/cubits/MiniTruckDriver/AssignedOrders/AssignedOrdersCubit.dart';
@@ -470,11 +471,11 @@ class _StopCard extends StatelessWidget {
               clipBehavior: Clip.none,
               children: [
                 _MapThumb(),
-                Positioned(
-                  left: -6,
-                  bottom: -6,
-                  child: _NumberBadge(number: stop.idx),
-                ),
+                // Positioned(
+                //   left: -6,
+                //   bottom: -6,
+                //   child: _NumberBadge(number: stop.idx),
+                // ),
               ],
             ),
             const SizedBox(width: 14),
@@ -583,6 +584,16 @@ class _RightPanel extends StatelessWidget {
   final _Stop stop;
   const _RightPanel({required this.stop});
 
+  Future<void> _openGoogleMaps(String latlng) async {
+    final Uri googleMapsUrl = Uri.parse("https://www.google.com/maps/search/?api=1&query=$latlng");
+
+    if (await canLaunchUrl(googleMapsUrl)) {
+      await launchUrl(googleMapsUrl, mode: LaunchMode.externalApplication);
+    } else {
+      throw 'Could not launch Google Maps';
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final muted = TextStyle(
@@ -601,7 +612,7 @@ class _RightPanel extends StatelessWidget {
         const SizedBox(height: 10),
         ElevatedButton.icon(
           onPressed: () {
-            // _openMapsForLocation(context, stop.location, stop.address);
+            _openGoogleMaps(stop.location??"");
           },
           icon: const Icon(Icons.near_me, size: 18),
           label: const Text('Navigate'),
