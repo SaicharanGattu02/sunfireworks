@@ -162,8 +162,7 @@ class _HomescreenState extends State<HomeScreen> {
                       }
                       final r = results[index];
                       // Compute UI values
-                      final city =
-                          r.wayPointName ?? (r.dcmAssignment?.warehouse ?? "—");
+                      final city = r.wayPointName ?? (r.dcmAssignment?.warehouse ?? "—");
 
                       final status = r.dcmAssignment?.status ?? "—";
                       return InkWell(
