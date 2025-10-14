@@ -10,11 +10,17 @@ class DriverAssignmentModel {
   });
 
   factory DriverAssignmentModel.fromJson(Map<String, dynamic> json) {
-    return DriverAssignmentModel(
-      success: json['success'] ?? false,
-      message: json['message'] ?? '',
-      data: json['data'] != null ? AssignmentData.fromJson(json['data']) : null,
-    );
+    try {
+      return DriverAssignmentModel(
+        success: json['success'] ?? false,
+        message: json['message']?.toString() ?? '',
+        data: json['data'] != null ? AssignmentData.fromJson(json['data']) : null,
+      );
+    } catch (e) {
+      print('Error parsing DriverAssignmentModel: $e');
+      print('JSON: $json');
+      rethrow;
+    }
   }
 }
 
@@ -36,16 +42,30 @@ class AssignmentData {
   });
 
   factory AssignmentData.fromJson(Map<String, dynamic> json) {
-    return AssignmentData(
-      page: json['page'] ?? 0,
-      nextPage: json['next_page'],
-      prevPage: json['prev_page'],
-      count: json['count'] ?? 0,
-      rowsPerPage: json['rows_per_page'] ?? 0,
-      results: (json['results'] as List<dynamic>? ?? [])
-          .map((e) => AssignmentResult.fromJson(e))
-          .toList(),
-    );
+    try {
+      return AssignmentData(
+        page: json['page'] ?? 0,
+        nextPage: json['next_page'],
+        prevPage: json['prev_page'],
+        count: json['count'] ?? 0,
+        rowsPerPage: json['rows_per_page'] ?? 0,
+        results: (json['results'] as List<dynamic>? ?? [])
+            .asMap()
+            .entries
+            .map((entry) {
+          try {
+            return AssignmentResult.fromJson(entry.value);
+          } catch (e) {
+            print('Error parsing AssignmentResult at index ${entry.key}: $e');
+            rethrow;
+          }
+        }).toList(),
+      );
+    } catch (e) {
+      print('Error parsing AssignmentData: $e');
+      print('JSON: $json');
+      rethrow;
+    }
   }
 }
 
@@ -91,34 +111,48 @@ class AssignmentResult {
   });
 
   factory AssignmentResult.fromJson(Map<String, dynamic> json) {
-    return AssignmentResult(
-      id: json['id'] ?? '',
-      dcmAssignment: json['dcm_assignment'] != null
-          ? DcmAssignment.fromJson(json['dcm_assignment'])
-          : null,
-      bags: (json['bags'] as List<dynamic>? ?? [])
-          .map((e) => Bag.fromJson(e))
-          .toList(),
-      individualItems: json['individual_items'] ?? [],
-      comboItems: (json['combo_items'] as List<dynamic>? ?? [])
-          .map((e) => ComboItem.fromJson(e))
-          .toList(),
-      wayPoint: json['way_point'],
-      wayPointName: json['way_point_name'],
-      assignedCars: (json['assigned_cars'] as List<dynamic>? ?? [])
-          .map((e) => AssignedCar.fromJson(e))
-          .toList(),
-      noOfVehicles: json['no_of_vehicles'] ?? 0,
-      selectedPoints: json['selected_points'],
-      radiusKm: json['radius_km'],
-      isActive: json['is_active'] ?? false,
-      extraBags: json['extra_bags'] ?? [],
-      extraIndividualItems: json['extra_individual_items'] ?? [],
-      extraComboItems: json['extra_combo_items'] ?? [],
-      distance: json['distance'],
-      boxesCount: json['boxes_count'] ?? 0,
-      extraBoxesCount: json['extra_boxes_count'] ?? 0,
-    );
+    try {
+      return AssignmentResult(
+        id: json['id']?.toString() ?? '',
+        dcmAssignment: json['dcm_assignment'] != null
+            ? DcmAssignment.fromJson(json['dcm_assignment'])
+            : null,
+        bags: (json['bags'] as List<dynamic>? ?? [])
+            .map((e) => Bag.fromJson(e))
+            .toList(),
+        individualItems: json['individual_items'] ?? [],
+        comboItems: (json['combo_items'] as List<dynamic>? ?? [])
+            .map((e) => ComboItem.fromJson(e))
+            .toList(),
+        wayPoint: json['way_point']?.toString(),
+        wayPointName: json['way_point_name']?.toString(),
+        assignedCars: (json['assigned_cars'] as List<dynamic>? ?? [])
+            .asMap()
+            .entries
+            .map((entry) {
+          try {
+            return AssignedCar.fromJson(entry.value);
+          } catch (e) {
+            print('Error parsing AssignedCar at index ${entry.key}: $e');
+            rethrow;
+          }
+        }).toList(),
+        noOfVehicles: json['no_of_vehicles'] ?? 0,
+        selectedPoints: json['selected_points']?.toString(),
+        radiusKm: json['radius_km'],
+        isActive: json['is_active'] ?? false,
+        extraBags: json['extra_bags'] ?? [],
+        extraIndividualItems: json['extra_individual_items'] ?? [],
+        extraComboItems: json['extra_combo_items'] ?? [],
+        distance: json['distance'],
+        boxesCount: json['boxes_count'] ?? 0,
+        extraBoxesCount: json['extra_boxes_count'] ?? 0,
+      );
+    } catch (e) {
+      print('Error parsing AssignmentResult: $e');
+      print('JSON: $json');
+      rethrow;
+    }
   }
 }
 
@@ -140,14 +174,20 @@ class DcmAssignment {
   });
 
   factory DcmAssignment.fromJson(Map<String, dynamic> json) {
-    return DcmAssignment(
-      id: json['id'] ?? '',
-      assignmentId: json['assignment_id'] ?? '',
-      dcmVehicle: json['dcm_vehicle'] ?? '',
-      warehouse: json['warehouse'] ?? '',
-      startPoint: json['start_point'] ?? '',
-      status: json['status'] ?? '',
-    );
+    try {
+      return DcmAssignment(
+        id: json['id']?.toString() ?? '',
+        assignmentId: json['assignment_id']?.toString() ?? '',
+        dcmVehicle: json['dcm_vehicle']?.toString() ?? '',
+        warehouse: json['warehouse']?.toString() ?? '',
+        startPoint: json['start_point']?.toString() ?? '',
+        status: json['status']?.toString() ?? '',
+      );
+    } catch (e) {
+      print('Error parsing DcmAssignment: $e');
+      print('JSON: $json');
+      rethrow;
+    }
   }
 }
 
@@ -155,25 +195,25 @@ class Bag {
   final String id;
   final String code;
   final String qrCode;
-  final List<dynamic> individualItems;
-  final List<dynamic> comboItems;
 
   Bag({
     required this.id,
     required this.code,
     required this.qrCode,
-    required this.individualItems,
-    required this.comboItems,
   });
 
   factory Bag.fromJson(Map<String, dynamic> json) {
-    return Bag(
-      id: json['id'] ?? '',
-      code: json['code'] ?? '',
-      qrCode: json['qr_code'] ?? '',
-      individualItems: json['individual_items'] ?? [],
-      comboItems: json['combo_items'] ?? [],
-    );
+    try {
+      return Bag(
+        id: json['id']?.toString() ?? '',
+        code: json['code']?.toString() ?? '',
+        qrCode: json['qr_code']?.toString() ?? '',
+      );
+    } catch (e) {
+      print('Error parsing Bag: $e');
+      print('JSON: $json');
+      rethrow;
+    }
   }
 }
 
@@ -191,12 +231,18 @@ class ComboItem {
   });
 
   factory ComboItem.fromJson(Map<String, dynamic> json) {
-    return ComboItem(
-      id: json['id'] ?? '',
-      combo: json['combo'] ?? '',
-      code: json['code'] ?? '',
-      qrCode: json['qr_code'] ?? '',
-    );
+    try {
+      return ComboItem(
+        id: json['id']?.toString() ?? '',
+        combo: json['combo']?.toString() ?? '',
+        code: json['code']?.toString() ?? '',
+        qrCode: json['qr_code']?.toString() ?? '',
+      );
+    } catch (e) {
+      print('Error parsing ComboItem: $e');
+      print('JSON: $json');
+      rethrow;
+    }
   }
 }
 
@@ -205,8 +251,9 @@ class AssignedCar {
   final String carLocation;
   final int ordersCount;
   final int? radius;
-  final DateTime startDateTime;
-  final DateTime endDateTime;
+  final double? distance;
+  final DateTime? startDateTime;
+  final DateTime? endDateTime;
   final String status;
   final Car? car;
   final List<IndividualStockDetail> individualStockDetails;
@@ -214,6 +261,7 @@ class AssignedCar {
   final String selectedPoint;
   final String createdAt;
   final List<Bag> bags;
+  final List<PackItem> packItems;
   final List<dynamic> packStockDetails;
   final List<dynamic> extraBags;
   final List<dynamic> extraPackItems;
@@ -223,8 +271,9 @@ class AssignedCar {
     required this.carLocation,
     required this.ordersCount,
     this.radius,
-    required this.startDateTime,
-    required this.endDateTime,
+    this.distance,
+    this.startDateTime,
+    this.endDateTime,
     required this.status,
     this.car,
     required this.individualStockDetails,
@@ -232,37 +281,71 @@ class AssignedCar {
     required this.selectedPoint,
     required this.createdAt,
     required this.bags,
+    required this.packItems,
     required this.packStockDetails,
     required this.extraBags,
     required this.extraPackItems,
   });
 
   factory AssignedCar.fromJson(Map<String, dynamic> json) {
-    return AssignedCar(
-      id: json['id'] ?? '',
-      carLocation: json['car_location'] ?? '',
-      ordersCount: json['orders_count'] ?? 0,
-      radius: json['radius'],
-      startDateTime: DateTime.parse(json['start_date_time']),
-      endDateTime: DateTime.parse(json['end_date_time']),
-      status: json['status'] ?? '',
-      car: json['car'] != null ? Car.fromJson(json['car']) : null,
-      individualStockDetails:
-      (json['individual_stock_details'] as List<dynamic>? ?? [])
-          .map((e) => IndividualStockDetail.fromJson(e))
-          .toList(),
-      comboStockDetails: (json['combo_stock_details'] as List<dynamic>? ?? [])
-          .map((e) => ComboStockDetail.fromJson(e))
-          .toList(),
-      selectedPoint: json['selected_point'] ?? '',
-      createdAt: json['created_at'] ?? '',
-      bags: (json['bags'] as List<dynamic>? ?? [])
-          .map((e) => Bag.fromJson(e))
-          .toList(),
-      packStockDetails: json['pack_stock_details'] ?? [],
-      extraBags: json['extra_bags'] ?? [],
-      extraPackItems: json['extra_pack_items'] ?? [],
-    );
+    try {
+      return AssignedCar(
+        id: json['id']?.toString() ?? '',
+        carLocation: json['car_location']?.toString() ?? '',
+        ordersCount: json['orders_count'] ?? 0,
+        radius: json['radius'],
+        distance: (json['distance'] != null)
+            ? (json['distance'] is int
+            ? (json['distance'] as int).toDouble()
+            : json['distance'] as double?)
+            : null,
+        startDateTime: json['start_date_time'] != null
+            ? DateTime.tryParse(json['start_date_time']?.toString() ?? '')
+            : null,
+        endDateTime: json['end_date_time'] != null
+            ? DateTime.tryParse(json['end_date_time']?.toString() ?? '')
+            : null,
+        status: json['status']?.toString() ?? '',
+        car: json['car'] != null ? Car.fromJson(json['car']) : null,
+        individualStockDetails: (json['individual_stock_details'] as List<dynamic>? ?? [])
+            .asMap()
+            .entries
+            .map((entry) {
+          try {
+            return IndividualStockDetail.fromJson(entry.value);
+          } catch (e) {
+            print('Error parsing IndividualStockDetail at index ${entry.key}: $e');
+            rethrow;
+          }
+        }).toList(),
+        comboStockDetails: (json['combo_stock_details'] as List<dynamic>? ?? [])
+            .asMap()
+            .entries
+            .map((entry) {
+          try {
+            return ComboStockDetail.fromJson(entry.value);
+          } catch (e) {
+            print('Error parsing ComboStockDetail at index ${entry.key}: $e');
+            rethrow;
+          }
+        }).toList(),
+        selectedPoint: json['selected_point']?.toString() ?? '',
+        createdAt: json['created_at']?.toString() ?? '',
+        bags: (json['bags'] as List<dynamic>? ?? [])
+            .map((e) => Bag.fromJson(e))
+            .toList(),
+        packItems: (json['pack_items'] as List<dynamic>? ?? [])
+            .map((e) => PackItem.fromJson(e))
+            .toList(),
+        packStockDetails: json['pack_stock_details'] ?? [],
+        extraBags: json['extra_bags'] ?? [],
+        extraPackItems: json['extra_pack_items'] ?? [],
+      );
+    } catch (e) {
+      print('Error parsing AssignedCar: $e');
+      print('JSON: $json');
+      rethrow;
+    }
   }
 }
 
@@ -271,21 +354,33 @@ class Car {
   final String vehicleNumber;
   final String driver;
   final String mobile;
+  final String? company;
+  final String? model;
 
   Car({
     required this.carId,
     required this.vehicleNumber,
     required this.driver,
     required this.mobile,
+    this.company,
+    this.model,
   });
 
   factory Car.fromJson(Map<String, dynamic> json) {
-    return Car(
-      carId: json['car_id'] ?? '',
-      vehicleNumber: json['vehicle_number'] ?? '',
-      driver: json['driver'] ?? '',
-      mobile: json['mobile'] ?? '',
-    );
+    try {
+      return Car(
+        carId: json['car_id']?.toString() ?? '',
+        vehicleNumber: json['vehicle_number']?.toString() ?? '',
+        driver: json['driver']?.toString() ?? '',
+        mobile: json['mobile']?.toString() ?? '',
+        company: json['company']?.toString(),
+        model: json['model']?.toString(),
+      );
+    } catch (e) {
+      print('Error parsing Car: $e');
+      print('JSON: $json');
+      rethrow;
+    }
   }
 }
 
@@ -301,11 +396,17 @@ class IndividualStockDetail {
   });
 
   factory IndividualStockDetail.fromJson(Map<String, dynamic> json) {
-    return IndividualStockDetail(
-      individualId: json['individual_id'] ?? '',
-      individualName: json['individual_name'] ?? '',
-      stockRequired: json['stock_required'] ?? 0,
-    );
+    try {
+      return IndividualStockDetail(
+        individualId: json['individual_id']?.toString() ?? '',
+        individualName: json['individual_name']?.toString() ?? '',
+        stockRequired: json['stock_required'] ?? 0,
+      );
+    } catch (e) {
+      print('Error parsing IndividualStockDetail: $e');
+      print('JSON: $json');
+      rethrow;
+    }
   }
 }
 
@@ -321,10 +422,110 @@ class ComboStockDetail {
   });
 
   factory ComboStockDetail.fromJson(Map<String, dynamic> json) {
-    return ComboStockDetail(
-      comboId: json['combo_id'] ?? '',
-      comboName: json['combo_name'] ?? '',
-      stockRequired: json['stock_required'] ?? 0,
-    );
+    try {
+      return ComboStockDetail(
+        comboId: json['combo_id']?.toString() ?? '',
+        comboName: json['combo_name']?.toString() ?? '',
+        stockRequired: json['stock_required'] ?? 0,
+      );
+    } catch (e) {
+      print('Error parsing ComboStockDetail: $e');
+      print('JSON: $json');
+      rethrow;
+    }
+  }
+}
+
+class PackItem {
+  final String id;
+  final PackOrder? order;
+  final List<PackIndividualItem> individualItems;
+  final List<dynamic> comboItems;
+  final String qrCode;
+  final String code;
+
+  PackItem({
+    required this.id,
+    this.order,
+    required this.individualItems,
+    required this.comboItems,
+    required this.qrCode,
+    required this.code,
+  });
+
+  factory PackItem.fromJson(Map<String, dynamic> json) {
+    try {
+      return PackItem(
+        id: json['id']?.toString() ?? '',
+        order: json['order'] != null ? PackOrder.fromJson(json['order']) : null,
+        individualItems: (json['individual_items'] as List<dynamic>? ?? [])
+            .asMap()
+            .entries
+            .map((entry) {
+          try {
+            return PackIndividualItem.fromJson(entry.value);
+          } catch (e) {
+            print('Error parsing PackIndividualItem at index ${entry.key}: $e');
+            rethrow;
+          }
+        }).toList(),
+        comboItems: json['combo_items'] ?? [],
+        qrCode: json['qr_code']?.toString() ?? '',
+        code: json['code']?.toString() ?? '',
+      );
+    } catch (e) {
+      print('Error parsing PackItem: $e');
+      print('JSON: $json');
+      rethrow;
+    }
+  }
+}
+
+class PackOrder {
+  final String id;
+  final String orderId;
+  final String orderStatus;
+
+  PackOrder({
+    required this.id,
+    required this.orderId,
+    required this.orderStatus,
+  });
+
+  factory PackOrder.fromJson(Map<String, dynamic> json) {
+    try {
+      return PackOrder(
+        id: json['id']?.toString() ?? '',
+        orderId: json['order_id']?.toString() ?? '',
+        orderStatus: json['order_status']?.toString() ?? '',
+      );
+    } catch (e) {
+      print('Error parsing PackOrder: $e');
+      print('JSON: $json');
+      rethrow;
+    }
+  }
+}
+
+class PackIndividualItem {
+  final String id;
+  final String name;
+
+  PackIndividualItem({
+    required this.id,
+    required this.name,
+  });
+
+  factory PackIndividualItem.fromJson(Map<String, dynamic> json) {
+    try {
+      return PackIndividualItem(
+        id: json['id']?.toString() ?? '',
+        name: json['name']?.toString() ?? '',
+      );
+    } catch (e) {
+      print('Error parsing PackIndividualItem: $e');
+      print('JSON: $json');
+      rethrow;
+    }
   }
 }

@@ -11,8 +11,8 @@ import '../../data/bloc/cubits/TipperDriver/DriverAssignment/driver_assignment_c
 import '../../data/bloc/cubits/TipperDriver/DriverAssignment/driver_assignment_states.dart';
 
 class DistributeLocationsScreen extends StatefulWidget {
-  const DistributeLocationsScreen({super.key});
-
+  final String dcm_assignmentID;
+  const DistributeLocationsScreen({super.key, required this.dcm_assignmentID});
   @override
   State<DistributeLocationsScreen> createState() =>
       _DistributeLocationsScreenState();
@@ -132,12 +132,12 @@ class _DistributeLocationsScreenState extends State<DistributeLocationsScreen> {
                       status: c.status,
                       onTap: (){
                         context.push(
-                          '/truck_delivery',
+                          '/truck_delivery?dcm_assignmentID=${widget.dcm_assignmentID}',
                           extra: c, // ✅ your model object
                         );
                       },
                       onNav: (){
-                        _openGoogleMaps(17.3850, 78.4867); // Example: Hyderabad
+                        _openGoogleMaps(c.carLocation); // Example: Hyderabad
                       }
                     );
                   },
@@ -153,9 +153,8 @@ class _DistributeLocationsScreenState extends State<DistributeLocationsScreen> {
     );
   }
 
-  Future<void> _openGoogleMaps(double lat, double lng) async {
-    final Uri googleMapsUrl = Uri.parse("https://www.google.com/maps/search/?api=1&query=$lat,$lng");
-
+  Future<void> _openGoogleMaps(String latlng) async {
+    final Uri googleMapsUrl = Uri.parse("https://www.google.com/maps/search/?api=1&query=$latlng");
     if (await canLaunchUrl(googleMapsUrl)) {
       await launchUrl(googleMapsUrl, mode: LaunchMode.externalApplication);
     } else {

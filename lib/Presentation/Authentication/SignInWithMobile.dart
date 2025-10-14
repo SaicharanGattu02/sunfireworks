@@ -12,6 +12,8 @@ import 'package:sunfireworks/utils/media_query_helper.dart';
 import 'package:sunfireworks/widgets/CommonTextField.dart';
 import 'package:location/location.dart' as loc;
 
+import '../../services/AuthService.dart';
+
 class SignInWithMobile extends StatefulWidget {
   const SignInWithMobile({super.key});
 
@@ -184,10 +186,13 @@ class _SignInWithMobileState extends State<SignInWithMobile> {
                     //     return null;
                     //   },
                     // ),
-                    Text("Sign In", style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.w600
-                    )),
+                    Text(
+                      "Sign In",
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
                     CommonTextField1(
                       lable: "Mobile Number",
                       hint: "Enter mobile number",
@@ -215,9 +220,18 @@ class _SignInWithMobileState extends State<SignInWithMobile> {
         child: Padding(
           padding: const EdgeInsets.fromLTRB(16, 0, 16, 50),
           child: BlocConsumer<AuthCubit, AuthStates>(
-            listener: (context, state) {
+            listener: (context, state) async {
               if (state is AuthGenerateOTP) {
                 context.push("/otp?mobile_number=${_mobileController.text}");
+              } else if (state is AuthTestLogin) {
+                final data = state.verifyOTPModel.data;
+                await AuthService.saveTokens(
+                  data?.accessToken ?? "",
+                  data?.refreshToken ?? "",
+                  data?.userRole ?? "",
+                  0,
+                );
+                context.pushReplacement("/dashboard");
               } else if (state is AuthFailure) {
                 CustomSnackBar1.show(context, state.message);
               }
@@ -232,7 +246,14 @@ class _SignInWithMobileState extends State<SignInWithMobile> {
                     Map<String, dynamic> data = {
                       "mobile": _mobileController.text,
                     };
-                    context.read<AuthCubit>().getOTP(data);
+
+                    if (_mobileController.text == "8888888888") {
+                      // Call test login for test number
+                      context.read<AuthCubit>().testLogin(data);
+                    } else {
+                      // Normal OTP flow
+                      context.read<AuthCubit>().getOTP(data);
+                    }
                   } else {
                     print("Validation failed");
                   }

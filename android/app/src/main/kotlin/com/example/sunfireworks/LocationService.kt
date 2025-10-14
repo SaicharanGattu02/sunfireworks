@@ -11,21 +11,19 @@ import android.content.pm.PackageManager
 import android.location.Address
 import android.location.Geocoder
 import android.os.Build
-import android.os.Handler
 import android.os.IBinder
 import android.os.Looper
 import android.util.Log
 import androidx.core.app.ActivityCompat
 import androidx.core.app.NotificationCompat
 import androidx.core.content.ContextCompat
+import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.Granularity
 import com.google.android.gms.location.LocationCallback
 import com.google.android.gms.location.LocationRequest
 import com.google.android.gms.location.LocationResult
 import com.google.android.gms.location.LocationServices
-import com.google.android.gms.location.LocationSettingsRequest
 import com.google.android.gms.location.Priority
-import com.google.android.gms.location.SettingsClient
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -38,49 +36,27 @@ import retrofit2.Response as RetrofitResponse
 import java.io.IOException
 import java.util.Locale
 
-data class LocationReq(
-    val latitude: String,
-    val longitude: String,
-    val location: String
-)
 
 class LocationService : Service() {
 
-    // ===== Constants =====
     private val CHANNEL_ID = "location_service_channel"
     private val NOTIF_ID = 1001
     private val TAG = "LocationService"
 
-    // intervals
-    private val HIGH_ACC_INTERVAL_MS = 10_000L
-    private val HIGH_ACC_FASTEST_MS = 5_000L
-    private val BALANCED_INTERVAL_MS = 15_000L
-    private val BALANCED_FASTEST_MS = 7_500L
-    private val FALLBACK_SWITCH_DELAY_MS = 30_000L // switch to balanced if GPS not locking
+    // Update every 3 seconds
+    private val UPDATE_INTERVAL_MS = 3_000L
+    private val FASTEST_INTERVAL_MS = 2_000L
 
-    // throttle sending to server
-    private val MIN_TIME_BETWEEN_SEND_MS = 15_000L
-    private val MIN_DISTANCE_BETWEEN_SEND_M = 30f
-
-    // members
-    private lateinit var fusedLocationClient: com.google.android.gms.location.FusedLocationProviderClient
+    // Google location clients
+    private lateinit var fusedLocationClient: FusedLocationProviderClient
     private lateinit var locationCallback: LocationCallback
-    private lateinit var settingsClient: SettingsClient
+    private lateinit var locationRequest: LocationRequest
 
-    private lateinit var highAccRequest: LocationRequest
-    private lateinit var balancedRequest: LocationRequest
-
-    private var useBalanced = false
-    private var fallbackHandler: Handler? = null
-    private var fallbackRunnable: Runnable? = null
-
+    // User session info
     private var token: String = ""
     private var role: String = ""
 
-    private var lastSentAt: Long = 0L
-    private var lastSentLat: Double? = null
-    private var lastSentLng: Double? = null
-
+    // Coroutine scope
     private val serviceScope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
 
     companion object {
@@ -99,150 +75,80 @@ class LocationService : Service() {
 
     override fun onCreate() {
         super.onCreate()
-
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
-        settingsClient = LocationServices.getSettingsClient(this)
 
-        // Build requests
-        highAccRequest = LocationRequest.Builder(
-            Priority.PRIORITY_HIGH_ACCURACY, HIGH_ACC_INTERVAL_MS
+        // Configure for accurate location updates every 3 seconds
+        locationRequest = LocationRequest.Builder(
+            Priority.PRIORITY_HIGH_ACCURACY,
+            UPDATE_INTERVAL_MS
         )
-            .setMinUpdateIntervalMillis(HIGH_ACC_FASTEST_MS)
-            .setWaitForAccurateLocation(false) // do not block for perfect GPS
+            .setMinUpdateIntervalMillis(FASTEST_INTERVAL_MS)
+            .setWaitForAccurateLocation(true)
             .setGranularity(Granularity.GRANULARITY_PERMISSION_LEVEL)
             .build()
 
-        balancedRequest = LocationRequest.Builder(
-            Priority.PRIORITY_BALANCED_POWER_ACCURACY, BALANCED_INTERVAL_MS
-        )
-            .setMinUpdateIntervalMillis(BALANCED_FASTEST_MS)
-            .setGranularity(Granularity.GRANULARITY_PERMISSION_LEVEL)
-            .build()
-
+        // Callback for each new location
         locationCallback = object : LocationCallback() {
             override fun onLocationResult(result: LocationResult) {
                 val loc = result.lastLocation ?: return
-                Log.d(TAG, "Location: ${loc.latitude}, ${loc.longitude}, acc=${loc.accuracy}")
+                Log.d(TAG, "📍 Location: ${loc.latitude}, ${loc.longitude}, acc=${loc.accuracy}")
 
-                // If we switched to balanced already, keep going; otherwise if we finally got a fix, cancel fallback switch
-                if (!useBalanced) {
-                    cancelFallbackSwitch()
-                }
-
-                // Throttle by time + distance
-                val now = System.currentTimeMillis()
-                val shouldSendByTime = now - lastSentAt >= MIN_TIME_BETWEEN_SEND_MS
-                val shouldSendByDistance = when {
-                    lastSentLat == null || lastSentLng == null -> true
-                    else -> {
-                        val d = distanceMeters(
-                            lastSentLat!!, lastSentLng!!,
-                            loc.latitude, loc.longitude
-                        )
-                        d >= MIN_DISTANCE_BETWEEN_SEND_M
+                // Send immediately to server
+                serviceScope.launch {
+                    val address = withContext(Dispatchers.IO) {
+                        resolveAddress(loc.latitude, loc.longitude)
                     }
-                }
 
-                if (shouldSendByTime && shouldSendByDistance) {
-                    lastSentAt = now
-                    lastSentLat = loc.latitude
-                    lastSentLng = loc.longitude
+                    Log.d(TAG, "Resolved address: $address")
 
-                    // Reverse geocode off main thread (optional)
-                    serviceScope.launch {
-                        val address = withContext(Dispatchers.IO) {
-                            resolveAddress(loc.latitude, loc.longitude)
-                        }
-                        Log.d(TAG, "Address: $address")
-
-                        // Send async (Retrofit enqueue) or switch to suspend if you have it
-                        sendLocationToServer(
-                            lat = loc.latitude.toString(),
-                            lng = loc.longitude.toString()
-                        )
-                    }
+                    sendLocationToServer(
+                        lat = loc.latitude.toString(),
+                        lng = loc.longitude.toString()
+                    )
                 }
             }
         }
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        // Foreground notification
         createNotificationChannel()
         val text = intent?.getStringExtra("inputExtra") ?: "Location Service running"
         showNotification(text)
 
-        // Read token/role stored by Flutter shared_preferences
         token = getAccessToken(applicationContext) ?: ""
         role = getRole(applicationContext) ?: ""
-        Log.d(TAG, "Token present=${token.isNotBlank()} role=$role")
 
         // Permission check
         val fineGranted = ActivityCompat.checkSelfPermission(
             this, android.Manifest.permission.ACCESS_FINE_LOCATION
         ) == PackageManager.PERMISSION_GRANTED
-        val coarseGranted = ActivityCompat.checkSelfPermission(
-            this, android.Manifest.permission.ACCESS_COARSE_LOCATION
-        ) == PackageManager.PERMISSION_GRANTED
 
-        if (!fineGranted && !coarseGranted) {
-            Log.w(TAG, "Missing location permission; stopping service.")
+        if (!fineGranted) {
+            Log.w(TAG, "❌ Missing location permission; stopping service.")
             stopSelf()
             return START_NOT_STICKY
         }
 
-        // Settings check (do not crash if not satisfied; just log)
-        val settingsRequest = LocationSettingsRequest.Builder()
-            .addLocationRequest(highAccRequest)
-            .build()
-        settingsClient.checkLocationSettings(settingsRequest)
-            .addOnFailureListener { e ->
-                Log.w(TAG, "Location settings not satisfied: $e")
-            }
-
-        // Start with HIGH accuracy, set a fallback switch to BALANCED after delay if needed
-        useBalanced = false
-        requestUpdates(highAccRequest)
-        scheduleFallbackSwitch()
-
+        // Start requesting updates every 3 seconds
+        requestUpdates()
         return START_STICKY
     }
 
-    private fun requestUpdates(request: LocationRequest) {
+    private fun requestUpdates() {
         fusedLocationClient.requestLocationUpdates(
-            request,
+            locationRequest,
             locationCallback,
             Looper.getMainLooper()
         )
-        Log.d(TAG, "Requested updates with priority=${request.priority}")
+        Log.d(TAG, "✅ Started high-accuracy updates every 3 seconds.")
     }
 
     private fun removeUpdates() {
         fusedLocationClient.removeLocationUpdates(locationCallback)
-        Log.d(TAG, "Removed location updates")
+        Log.d(TAG, "🛑 Stopped location updates.")
     }
 
-    private fun scheduleFallbackSwitch() {
-        cancelFallbackSwitch()
-        fallbackHandler = Handler(Looper.getMainLooper())
-        fallbackRunnable = Runnable {
-            if (!useBalanced) {
-                Log.d(TAG, "Switching to BALANCED due to no quick GPS lock")
-                removeUpdates()
-                useBalanced = true
-                requestUpdates(balancedRequest)
-            }
-        }
-        fallbackHandler?.postDelayed(fallbackRunnable!!, FALLBACK_SWITCH_DELAY_MS)
-    }
-
-    private fun cancelFallbackSwitch() {
-        fallbackRunnable?.let { fallbackHandler?.removeCallbacks(it) }
-        fallbackRunnable = null
-        fallbackHandler = null
-    }
-
-    // Reverse geocoding (safe background call)
+    // Reverse geocoding (convert lat/lng → address)
     private fun resolveAddress(lat: Double, lng: Double): String {
         return try {
             val geocoder = Geocoder(this, Locale.getDefault())
@@ -253,39 +159,34 @@ class LocationService : Service() {
                 "Unknown address"
             }
         } catch (e: IOException) {
-            Log.e(TAG, "Geocoder failed", e)
+            Log.e(TAG, "Geocoder failed: ${e.message}", e)
             "Unknown address"
         } catch (e: Exception) {
-            Log.e(TAG, "Geocoder unexpected error", e)
+            Log.e(TAG, "Unexpected geocode error: ${e.message}", e)
             "Unknown address"
         }
     }
 
-    // Token/role from Flutter shared_preferences
+    // Flutter Shared Preferences access
     private fun getAccessToken(context: Context): String? {
-        val sp: SharedPreferences =
-            context.getSharedPreferences("FlutterSharedPreferences", Context.MODE_PRIVATE)
-        val token = sp.getString("flutter.access_token", "")
-        Log.d(TAG, "Access token present=${!token.isNullOrBlank()}")
-        return token
+        val sp = context.getSharedPreferences("FlutterSharedPreferences", Context.MODE_PRIVATE)
+        return sp.getString("flutter.access_token", "")
     }
 
     private fun getRole(context: Context): String? {
-        val sp: SharedPreferences =
-            context.getSharedPreferences("FlutterSharedPreferences", Context.MODE_PRIVATE)
-        val role = sp.getString("flutter.role", "")
-        Log.d(TAG, "Role=$role")
-        return role
+        val sp = context.getSharedPreferences("FlutterSharedPreferences", Context.MODE_PRIVATE)
+        return sp.getString("flutter.role", "")
     }
 
-    // Networking
+    // Networking - Send location to server
     private fun sendLocationToServer(lat: String, lng: String) {
         if (token.isBlank()) {
-            Log.w(TAG, "No token; skipping send")
+            Log.w(TAG, "⚠️ No token; skipping send.")
             return
         }
+
         val service = ApiClient.createService(ApiInterface::class.java)
-        val location = "$lat,$lng" // no space
+        val location = "$lat,$lng"
         val auth = "Bearer $token"
 
         val call: RetrofitCall<submitresponse> = if (role == "dcm_driver") {
@@ -300,19 +201,19 @@ class LocationService : Service() {
                 response: RetrofitResponse<submitresponse>
             ) {
                 if (response.isSuccessful) {
-                    Log.d(TAG, "API success: ${response.body()?.message}")
+                    Log.d(TAG, "📡 Sent: ${response.body()?.message}")
                 } else {
-                    Log.e(TAG, "API error[${response.code()}]: ${response.errorBody()?.string()}")
+                    Log.e(TAG, "❗ API Error [${response.code()}]: ${response.errorBody()?.string()}")
                 }
             }
 
             override fun onFailure(call: RetrofitCall<submitresponse>, t: Throwable) {
-                Log.e(TAG, "API failure: ${t.message}", t)
+                Log.e(TAG, "🚨 API failure: ${t.message}", t)
             }
         })
     }
 
-    // Foreground notification bits
+    // Foreground notification
     private fun createNotificationChannel() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val channel = NotificationChannel(
@@ -332,15 +233,15 @@ class LocationService : Service() {
         val notificationIntent = Intent(this, MainActivity::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
         }
+
         val pendingIntent = PendingIntent.getActivity(
             this, 0, notificationIntent,
             PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
         )
 
         val notification = NotificationCompat.Builder(this, CHANNEL_ID)
-            // Use a built-in icon to avoid resource errors.
             .setSmallIcon(android.R.drawable.ic_menu_mylocation)
-            .setContentTitle("Location running")
+            .setContentTitle("Location Tracking Active")
             .setContentText(text)
             .setOngoing(true)
             .setContentIntent(pendingIntent)
@@ -350,18 +251,12 @@ class LocationService : Service() {
     }
 
     override fun onDestroy() {
-        cancelFallbackSwitch()
         removeUpdates()
         serviceScope.cancel()
         super.onDestroy()
+        Log.d(TAG, "💤 LocationService destroyed.")
     }
 
     override fun onBind(intent: Intent?): IBinder? = null
-
-    // ===== Utilities =====
-    private fun distanceMeters(lat1: Double, lon1: Double, lat2: Double, lon2: Double): Float {
-        val results = FloatArray(1)
-        android.location.Location.distanceBetween(lat1, lon1, lat2, lon2, results)
-        return results[0]
-    }
 }
+

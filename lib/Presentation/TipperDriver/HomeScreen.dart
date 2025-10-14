@@ -102,7 +102,7 @@ class _HomescreenState extends State<HomeScreen> {
                               horizontal: 24.0,
                             ),
                             child: Text(
-                              error!,
+                              error,
                               textAlign: TextAlign.center,
                               style: const TextStyle(color: Colors.red),
                             ),
@@ -162,12 +162,15 @@ class _HomescreenState extends State<HomeScreen> {
                       }
                       final r = results[index];
                       // Compute UI values
-                      final city = r.wayPointName ?? (r.dcmAssignment?.warehouse ?? "—");
+                      final city =
+                          r.wayPointName ?? (r.dcmAssignment?.warehouse ?? "—");
 
                       final status = r.dcmAssignment?.status ?? "—";
                       return InkWell(
                         onTap: () {
-                          context.push("/distribute_locations");
+                          context.push(
+                            "/distribute_locations?dcm_assignmentID=${r.id}",
+                          );
                         },
                         child: _locationCard(
                           index: index + 1,
@@ -194,15 +197,16 @@ class _HomescreenState extends State<HomeScreen> {
     );
   }
 
-  Future<void> _openGoogleMaps(double lat, double lng) async {
-    final Uri googleMapsUrl = Uri.parse("https://www.google.com/maps/search/?api=1&query=$lat,$lng");
+  Future<void> _openGoogleMaps(String latlng) async {
+    final Uri googleMapsUrl = Uri.parse(
+      "https://www.google.com/maps/search/?api=1&query=$latlng",
+    );
     if (await canLaunchUrl(googleMapsUrl)) {
       await launchUrl(googleMapsUrl, mode: LaunchMode.externalApplication);
     } else {
       throw 'Could not launch Google Maps';
     }
   }
-
 
   /// Pagination trigger on scroll
   bool _onScroll(ScrollNotification notification) {
@@ -458,7 +462,7 @@ class _HomescreenState extends State<HomeScreen> {
               const SizedBox(height: 10),
               ElevatedButton.icon(
                 onPressed: () {
-                  _openGoogleMaps(17.3850, 78.4867); // Example: Hyderabad
+                  _openGoogleMaps(location); // Example: Hyderabad
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.red,

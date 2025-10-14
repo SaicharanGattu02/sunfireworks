@@ -20,7 +20,6 @@ class AuthCubit extends Cubit<AuthStates> {
     }
   }
 
-
   Future<void> verifyOTP(Map<String, dynamic> data) async {
     emit(AuthLoading());
     try {
@@ -35,4 +34,17 @@ class AuthCubit extends Cubit<AuthStates> {
     }
   }
 
+  Future<void> testLogin(Map<String, dynamic> data) async {
+    emit(AuthLoading());
+    try {
+      final response = await authRepository.testLogin(data);
+      if (response != null && response.success == true) {
+        emit(AuthTestLogin(response));
+      } else {
+        emit(AuthFailure(response?.message ?? ""));
+      }
+    } catch (e) {
+      emit(AuthFailure(e.toString()));
+    }
+  }
 }

@@ -7,6 +7,7 @@ abstract class AuthRepository {
   Future<GenerateOTPModel?> getOTP(Map<String, dynamic> data);
   Future<VerifyOTPModel?> verifyOTP(Map<String, dynamic> data);
   Future<GenerateOTPModel?> forgotPassword(Map<String, dynamic> data);
+  Future<VerifyOTPModel?> testLogin(Map<String, dynamic> data);
 }
 
 class AuthRepositoryImpl implements AuthRepository {
@@ -21,6 +22,11 @@ class AuthRepositoryImpl implements AuthRepository {
   @override
   Future<VerifyOTPModel?> verifyOTP(Map<String, dynamic> data) async {
     return await remoteDataSource.verifyOTP(data);
+  }
+
+  @override
+  Future<VerifyOTPModel?> testLogin(Map<String, dynamic> data) async {
+    return await remoteDataSource.testLogin(data);
   }
 
   @override

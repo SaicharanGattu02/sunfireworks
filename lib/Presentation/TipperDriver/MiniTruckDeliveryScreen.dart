@@ -7,15 +7,22 @@ import 'package:image_picker/image_picker.dart';
 import 'package:pin_code_fields/pin_code_fields.dart';
 import 'package:sunfireworks/Components/CustomAppButton.dart';
 import 'package:sunfireworks/data/bloc/cubits/TipperDriver/CarDriverOTP/CarDriverOTPStates.dart';
-
+import 'package:sunfireworks/data/bloc/cubits/TipperDriver/StockTransfer/stock_transfer_cubit.dart';
+import 'package:sunfireworks/data/bloc/cubits/TipperDriver/StockTransfer/stock_transfer_states.dart';
 import '../../Components/CustomSnackBar.dart';
 import '../../data/Models/TipperDriver/DriverAssignmentModel.dart';
 import '../../data/bloc/cubits/TipperDriver/CarDriverOTP/CarDriverOTPCubit.dart';
+import '../../data/bloc/cubits/TipperDriver/DriverAssignment/driver_assignment_cubit.dart';
 import '../QrScannerScreen.dart';
 
 class MiniTruckDeliveryScreen extends StatefulWidget {
   final AssignedCar assignedCar;
-  const MiniTruckDeliveryScreen({super.key, required this.assignedCar});
+  final String dcm_assignmentID;
+  const MiniTruckDeliveryScreen({
+    super.key,
+    required this.assignedCar,
+    required this.dcm_assignmentID,
+  });
   @override
   State<MiniTruckDeliveryScreen> createState() =>
       _MiniTruckDeliveryScreenState();
@@ -25,6 +32,7 @@ class _MiniTruckDeliveryScreenState extends State<MiniTruckDeliveryScreen> {
   final ImagePicker _picker = ImagePicker();
   File? _photoFile;
   late List<bool> _bagsDelivered;
+  late List<bool> _packsDelivered;
 
   // OTP
   final TextEditingController _otpController = TextEditingController();
@@ -36,7 +44,11 @@ class _MiniTruckDeliveryScreenState extends State<MiniTruckDeliveryScreen> {
   bool _generatingOtp = false;
 
   // ✅ Helper getter to check if all bags are delivered
-  bool get allBagsDelivered => _bagsDelivered.every((delivered) => delivered);
+  bool get allDelivered {
+    final allBagsDone = _bagsDelivered.every((d) => d);
+    final allPacksDone = _packsDelivered.every((d) => d);
+    return allBagsDone && allPacksDone;
+  }
 
   @override
   void initState() {
@@ -45,42 +57,86 @@ class _MiniTruckDeliveryScreenState extends State<MiniTruckDeliveryScreen> {
       widget.assignedCar.bags.length,
       (_) => false,
     );
+
+    _packsDelivered = List.generate(
+      widget.assignedCar.packItems.length,
+      (_) => false,
+    );
   }
 
   Future<void> _handleScannedCode(String scannedData) async {
-    // Extract the bag code from the scanned string
-    // Assuming format always starts with "Bag Code: <code>"
-    final codePrefix = "Bag Code: ";
-    String scannedCode = "";
-
-    if (scannedData.startsWith(codePrefix)) {
-      final endIndex = scannedData.indexOf(" |");
-      if (endIndex != -1) {
-        scannedCode = scannedData.substring(codePrefix.length, endIndex).trim();
-      } else {
-        scannedCode = scannedData.substring(codePrefix.length).trim();
-      }
-    } else {
-      scannedCode = scannedData.trim();
-    }
-
     final bags = widget.assignedCar.bags;
-    bool found = false;
+    final packs = widget.assignedCar.packItems;
 
-    for (int i = 0; i < bags.length; i++) {
-      if (bags[i].code == scannedCode) {
-        setState(() => _bagsDelivered[i] = true);
-        found = true;
-        break;
+    bool found = false;
+    String scannedCode = scannedData.trim();
+
+    // 🧩 CASE 1 — BAG QR
+    if (scannedData.startsWith("Bag Code:")) {
+      final prefix = "Bag Code:";
+      final endIndex = scannedData.indexOf(" |");
+      scannedCode = endIndex != -1
+          ? scannedData.substring(prefix.length, endIndex).trim()
+          : scannedData.substring(prefix.length).trim();
+
+      for (int i = 0; i < bags.length; i++) {
+        if (bags[i].code.toLowerCase() == scannedCode.toLowerCase()) {
+          setState(() => _bagsDelivered[i] = true);
+          found = true;
+          break;
+        }
+      }
+    }
+    // 🧩 CASE 2 — PACK (ORDER) QR
+    else if (scannedData.startsWith("Order ID:")) {
+      final prefix = "Order ID:";
+      final endIndex = scannedData.indexOf(" |");
+      scannedCode = endIndex != -1
+          ? scannedData.substring(prefix.length, endIndex).trim()
+          : scannedData.substring(prefix.length).trim();
+
+      // Match scanned order id or internal pack code
+      for (int i = 0; i < packs.length; i++) {
+        if (packs[i].code.toLowerCase() == scannedCode.toLowerCase() ||
+            (packs[i].order?.orderId.toLowerCase() ==
+                scannedCode.toLowerCase())) {
+          setState(() => _packsDelivered[i] = true);
+          found = true;
+          break;
+        }
       }
     }
 
+    // 🧩 CASE 3 — fallback match by code presence
+    if (!found) {
+      for (int i = 0; i < bags.length; i++) {
+        if (scannedData.contains(bags[i].code)) {
+          setState(() => _bagsDelivered[i] = true);
+          found = true;
+          scannedCode = bags[i].code;
+          break;
+        }
+      }
+    }
+
+    if (!found) {
+      for (int i = 0; i < packs.length; i++) {
+        if (scannedData.contains(packs[i].code)) {
+          setState(() => _packsDelivered[i] = true);
+          found = true;
+          scannedCode = packs[i].code;
+          break;
+        }
+      }
+    }
+
+    // ✅ FEEDBACK
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(
           found
-              ? "Bag $scannedCode marked delivered ✅"
-              : "Bag $scannedCode not in assigned list ❌",
+              ? "$scannedCode marked delivered ✅"
+              : "$scannedCode not found ❌",
         ),
       ),
     );
@@ -118,8 +174,6 @@ class _MiniTruckDeliveryScreenState extends State<MiniTruckDeliveryScreen> {
       0,
       (sum, e) => sum + e.stockRequired,
     );
-
-    int totalBoxes = totalIndividualBoxes + totalComboBoxes;
 
     return Scaffold(
       backgroundColor: Colors.grey[50],
@@ -161,7 +215,7 @@ class _MiniTruckDeliveryScreenState extends State<MiniTruckDeliveryScreen> {
           // Transport Card
           SliverToBoxAdapter(child: _transportCard(assignedCar)),
 
-          if (assignedCar.individualStockDetails.isNotEmpty)
+          if (assignedCar.bags.isNotEmpty)
             SliverToBoxAdapter(
               child: _summaryCard(
                 title: "Bags To Delivery",
@@ -172,6 +226,21 @@ class _MiniTruckDeliveryScreenState extends State<MiniTruckDeliveryScreen> {
                   (index) => _boxTile1(index, assignedCar.bags[index].code),
                 ),
                 footer: "Total: ${assignedCar.bags.length} boxes",
+              ),
+            ),
+
+          if (assignedCar.packItems.isNotEmpty)
+            SliverToBoxAdapter(
+              child: _summaryCard(
+                title: "Pack Items To Delivery",
+                total: assignedCar.packItems.length.toString(),
+                amount: "—",
+                items: List.generate(
+                  assignedCar.packItems.length,
+                  (index) =>
+                      _boxTile2(index, assignedCar.packItems[index].code),
+                ),
+                footer: "Total: ${assignedCar.packItems.length} Packs",
               ),
             ),
           //
@@ -205,7 +274,7 @@ class _MiniTruckDeliveryScreenState extends State<MiniTruckDeliveryScreen> {
           //   ),
 
           // OTP Section
-          if (allBagsDelivered)
+          if (allDelivered)
             SliverToBoxAdapter(
               child: Padding(
                 padding: const EdgeInsets.all(16),
@@ -216,58 +285,82 @@ class _MiniTruckDeliveryScreenState extends State<MiniTruckDeliveryScreen> {
               ),
             ),
 
-          // Photo Section
-          // if (allBagsDelivered)
+          // // Photo Section
+          // if (_otpVerified)
           //   SliverToBoxAdapter(
           //     child: Padding(
           //       padding: const EdgeInsets.all(16),
           //       child: _photoSection(),
           //     ),
           //   ),
+          if (_otpVerified)
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: BlocConsumer<StockTransferCubit, StockTransferStates>(
+                  listener: (context, state) {
+                    if (state is StockTransferLoaded) {
+                      CustomSnackBar1.show(
+                        context,
+                        state.successModel.message ?? "",
+                      );
+                      context
+                          .read<DriverAssignmentCubit>()
+                          .getDriverAssignments();
+                      Navigator.pop(context);
+                    } else if (state is StockTransferFailure) {
+                      CustomSnackBar1.show(context, state.error);
+                    }
+                  },
+                  builder: (context, state) {
+                    final isLoading = state is StockTransferLoading;
+                    return CustomAppButton1(
+                      text: "Submit & Complete Delivery",
+                      isLoading: isLoading,
+                      onPlusTap: (_otpVerified)
+                          ? () {
+                              // ✅ Collect delivered bag IDs
+                              final deliveredBagIds = [
+                                for (
+                                  int i = 0;
+                                  i < assignedCar.bags.length;
+                                  i++
+                                )
+                                  if (_bagsDelivered[i]) assignedCar.bags[i].id,
+                              ];
 
-          // Submit Button
-          // SliverToBoxAdapter(
-          //   child: Padding(
-          //     padding: const EdgeInsets.all(16),
-          //     child: BlocConsumer<UpdateOrderStatusCubit, UpdateOrderStatusStates>(
-          //       listener: (context, state) {
-          //         if (state is UpdateOrderStatusUpdated) {
-          //           CustomSnackBar1.show(context, state.successModel.message ?? "");
-          //           Navigator.pop(context);
-          //         } else if (state is UpdateOrderStatusFailure) {
-          //           CustomSnackBar1.show(context, state.error);
-          //         }
-          //       },
-          //       builder: (context, state) {
-          //         final isLoading = state is UpdateOrderStatusLoading;
-          //         return ElevatedButton.icon(
-          //           onPressed: (_otpVerified && _photoFile != null)
-          //               ? () {
-          //             Map<String, dynamic> data = {
-          //               "order_status": "delivered",
-          //               "delivery_image": _photoFile?.path,
-          //             };
-          //             context.read<UpdateOrderStatusCubit>().updateOrderStatus(
-          //               assignedCar.car?.id ?? '',
-          //               data,
-          //             );
-          //           }
-          //               : null,
-          //           style: ElevatedButton.styleFrom(
-          //             minimumSize: const Size(double.infinity, 48),
-          //             backgroundColor: Colors.green,
-          //           ),
-          //           label: isLoading
-          //               ? const CircularProgressIndicator(color: Colors.white)
-          //               : const Text(
-          //             'Submit & Complete Delivery',
-          //             style: TextStyle(color: Colors.white),
-          //           ),
-          //         );
-          //       },
-          //     ),
-          //   ),
-          // ),
+                              // ✅ Collect delivered pack IDs
+                              final deliveredPackIds = [
+                                for (
+                                  int i = 0;
+                                  i < assignedCar.packItems.length;
+                                  i++
+                                )
+                                  if (_packsDelivered[i])
+                                    assignedCar.packItems[i].id,
+                              ];
+
+                              final data = {
+                                "dcm_assignment": widget.dcm_assignmentID,
+                                "bags": deliveredBagIds,
+                                "packs": deliveredPackIds,
+                                "photo": _photoFile?.path,
+                              };
+
+                              print("📦 Payload: $data");
+
+                              context
+                                  .read<StockTransferCubit>()
+                                  .stockTransferApi(data);
+                            }
+                          : null,
+                    );
+                  },
+                ),
+              ),
+            ),
+
+          SliverPadding(padding: EdgeInsets.all(25)),
         ],
       ),
     );
@@ -327,7 +420,7 @@ class _MiniTruckDeliveryScreenState extends State<MiniTruckDeliveryScreen> {
                         ),
                         const SizedBox(width: 4),
                         Text(
-                          car.selectedPoint,
+                          car.selectedPoint??"",
                           style: const TextStyle(
                             fontSize: 13,
                             color: Colors.black87,
@@ -389,7 +482,7 @@ class _MiniTruckDeliveryScreenState extends State<MiniTruckDeliveryScreen> {
                     : () {
                         setState(() => _generatingOtp = true);
                         context.read<CarDriverOTPCubit>().generateOTP({
-                          "car_assignment_id": orderId,
+                          "mobile": mobile,
                         });
                       },
               ),
@@ -423,11 +516,11 @@ class _MiniTruckDeliveryScreenState extends State<MiniTruckDeliveryScreen> {
                 onPlusTap: state is CarDriverOTPLoading
                     ? null
                     : () {
-                  context.read<CarDriverOTPCubit>().verifyOTP({
-                    "mobile": mobile,
-                    "otp": _otpController.text,
-                  });
-                },
+                        context.read<CarDriverOTPCubit>().verifyOTP({
+                          "mobile": mobile,
+                          "otp": _otpController.text,
+                        });
+                      },
               ),
               Align(
                 alignment: Alignment.bottomRight,
@@ -547,6 +640,30 @@ class _MiniTruckDeliveryScreenState extends State<MiniTruckDeliveryScreen> {
               ),
               child: Text(footer, textAlign: TextAlign.center),
             ),
+        ],
+      ),
+    );
+  }
+
+  Widget _boxTile2(int index, String label) {
+    final delivered = _packsDelivered[index];
+    return Container(
+      width: 100,
+      height: 100,
+      padding: const EdgeInsets.all(10),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(
+          color: delivered ? Colors.green : Colors.grey.shade300,
+          width: 2,
+        ),
+      ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Text(label, textAlign: TextAlign.center),
+          if (delivered) const Icon(Icons.check_circle, color: Colors.green),
         ],
       ),
     );

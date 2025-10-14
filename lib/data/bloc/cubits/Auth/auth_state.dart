@@ -13,6 +13,11 @@ class AuthGenerateOTP extends AuthStates {
   AuthGenerateOTP(this.generateOTPModel);
 }
 
+class AuthTestLogin extends AuthStates {
+  VerifyOTPModel verifyOTPModel;
+  AuthTestLogin(this.verifyOTPModel);
+}
+
 class AuthVerifyOTP extends AuthStates {
   VerifyOTPModel verifyOTPModel;
   AuthVerifyOTP(this.verifyOTPModel);

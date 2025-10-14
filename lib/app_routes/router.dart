@@ -78,7 +78,8 @@ final GoRouter appRouter = GoRouter(
     GoRoute(
       path: '/distribute_locations',
       pageBuilder: (context, state) {
-        return buildSlideTransitionPage(DistributeLocationsScreen(), state);
+        final dcm_assignmentID = state.uri.queryParameters['dcm_assignmentID'] ?? "";
+        return buildSlideTransitionPage(DistributeLocationsScreen(dcm_assignmentID: dcm_assignmentID,), state);
       },
     ),
     GoRoute(
@@ -91,8 +92,9 @@ final GoRouter appRouter = GoRouter(
       path: '/truck_delivery',
       pageBuilder: (context, state) {
         final assignedCar = state.extra as AssignedCar; // ✅ get passed object
+        final dcm_assignmentID = state.uri.queryParameters['dcm_assignmentID'] ?? "";
         return buildSlideTransitionPage(
-          MiniTruckDeliveryScreen(assignedCar: assignedCar),
+          MiniTruckDeliveryScreen(assignedCar: assignedCar,dcm_assignmentID: dcm_assignmentID,),
           state,
         );
       },

@@ -21,6 +21,7 @@ class ApiClient {
   static const List<String> _unauthenticatedEndpoints = [
     '/auth/mobile-otp/',
     '/auth/verify-otp/',
+    '/auth/test-login/',
   ];
 
   static void setupInterceptors() {

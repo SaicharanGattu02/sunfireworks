@@ -35,6 +35,8 @@ abstract class RemoteDataSource {
   Future<PolylineModel?> getDCMPolyline();
   Future<SuccessModel?> generateCarDriverOTP(Map<String, dynamic> data);
   Future<SuccessModel?> verifyCarDriverOTP(Map<String, dynamic> data);
+  Future<SuccessModel?> stockTransferApi(Map<String, dynamic> data);
+  Future<VerifyOTPModel?> testLogin(Map<String, dynamic> data);
 }
 
 class RemoteDataSourceImpl implements RemoteDataSource {
@@ -58,6 +60,40 @@ class RemoteDataSourceImpl implements RemoteDataSource {
     }
 
     return FormData.fromMap(formMap);
+  }
+
+
+  @override
+  Future<VerifyOTPModel?> testLogin(Map<String, dynamic> data) async {
+    try {
+      final formdata = await buildFormData(data);
+
+      Response response = await ApiClient.post(
+        "${APIEndpointUrls.test_login}",
+        data: formdata,
+      );
+      AppLogger.log('testLogin:${response.data}');
+      return VerifyOTPModel.fromJson(response.data);
+    } catch (e) {
+      AppLogger.error('testLogin :: $e');
+      return null;
+    }
+  }
+
+
+  @override
+  Future<SuccessModel?> stockTransferApi(Map<String, dynamic> data) async {
+    try {
+      Response response = await ApiClient.post(
+        "${APIEndpointUrls.stock_transfer}",
+        data: data,
+      );
+      AppLogger.log('stockTransferApi:${response.data}');
+      return SuccessModel.fromJson(response.data);
+    } catch (e) {
+      AppLogger.error('stockTransferApi :: $e');
+      return null;
+    }
   }
 
   @override
