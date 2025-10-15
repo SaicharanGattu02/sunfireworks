@@ -6,9 +6,12 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:pin_code_fields/pin_code_fields.dart';
+import 'package:sunfireworks/Components/CustomAppButton.dart';
 import 'package:sunfireworks/Components/CustomSnackBar.dart';
 import 'package:sunfireworks/data/bloc/cubits/MiniTruckDriver/AssignedOrdersDetails/AssignedOrdersDetailsCubit.dart';
 import 'package:sunfireworks/data/bloc/cubits/MiniTruckDriver/CustomerGenerateOTP/CustomerGenerateOtpStates.dart';
+import 'package:sunfireworks/data/bloc/cubits/MiniTruckDriver/Payment/PaymentCubit.dart';
+import 'package:sunfireworks/data/bloc/cubits/MiniTruckDriver/Payment/PaymentStates.dart';
 import 'package:sunfireworks/data/bloc/cubits/MiniTruckDriver/UpdateOrderStatus/UpdateOrderStatusCubit.dart';
 import 'package:sunfireworks/data/bloc/cubits/MiniTruckDriver/UpdateOrderStatus/UpdateOrderStatusStates.dart';
 import 'package:sunfireworks/utils/color_constants.dart';
@@ -36,9 +39,13 @@ class _CustomerDeliveryScreenState extends State<CustomerDeliveryScreen> {
   bool _otpSent = false;
   bool _otpVerified = false;
 
+  String order_id = "";
+
   // UI state
   bool _verifying = false;
   bool _generatingOtp = false;
+
+  List<bool> _packsDelivered = [];
 
   @override
   void initState() {
@@ -46,6 +53,59 @@ class _CustomerDeliveryScreenState extends State<CustomerDeliveryScreen> {
     context.read<AssignedOrdersDetailsCubit>().fetchAssignedOrderDetails(
       widget.order_id,
     );
+  }
+
+  void _handleScannedCode(String scannedData) {
+    final m =
+        context.read<AssignedOrdersDetailsCubit>().state
+            is AssignedOrdersDetailsLoaded
+        ? (context.read<AssignedOrdersDetailsCubit>().state
+                  as AssignedOrdersDetailsLoaded)
+              .assignedOrdersDetails
+        : null;
+
+    if (m == null) return;
+
+    final packs = m.data?.packDetails ?? [];
+    bool found = false;
+    String scannedCode = scannedData.trim();
+
+    // Extract Order ID from scanned data
+    if (scannedData.startsWith("Order ID:")) {
+      final prefix = "Order ID:";
+      final endIndex = scannedData.indexOf(" |");
+      scannedCode = endIndex != -1
+          ? scannedData.substring(prefix.length, endIndex).trim()
+          : scannedData.substring(prefix.length).trim();
+
+      for (int i = 0; i < packs.length; i++) {
+        if (packs[i].order?.orderId?.toLowerCase() ==
+                scannedCode.toLowerCase() ||
+            packs[i].code?.toLowerCase() == scannedCode.toLowerCase()) {
+          setState(() => _packsDelivered[i] = true);
+          found = true;
+          break;
+        }
+      }
+    }
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          found
+              ? "$scannedCode marked delivered ✅"
+              : "$scannedCode not found ❌",
+        ),
+      ),
+    );
+
+    // ✅ After scan, check if all packs delivered → enable OTP
+    if (_packsDelivered.every((v) => v)) {
+      setState(() {
+        _otpSent = false;
+        _otpVerified = false;
+      });
+    }
   }
 
   @override
@@ -121,6 +181,16 @@ class _CustomerDeliveryScreenState extends State<CustomerDeliveryScreen> {
           }
           if (state is AssignedOrdersDetailsLoaded) {
             final m = state.assignedOrdersDetails;
+
+            // ✅ Initialize only if empty (first time after data loads)
+            if (_packsDelivered.isEmpty &&
+                (m.data?.packDetails?.isNotEmpty ?? false)) {
+              _packsDelivered = List<bool>.filled(
+                m.data!.packDetails!.length,
+                false,
+              );
+            }
+
             final customer = (m.data?.orderedCustomer?.isNotEmpty ?? false)
                 ? m.data!.orderedCustomer!.first
                 : null;
@@ -141,13 +211,12 @@ class _CustomerDeliveryScreenState extends State<CustomerDeliveryScreen> {
                           mobile: customer?.mobile ?? '—',
                           address: customer?.address ?? '—',
                         ),
-                        const SizedBox(height: 16),
-                        _summaryRow(
-                          orderBoxes: qty,
-                          extraBoxes:
-                              0, // if you have extra boxes in model, replace this
-                          totalValue: value,
-                        ),
+                        // const SizedBox(height: 16),
+                        // _summaryRow(
+                        //   orderBoxes: qty,
+                        //   extraBoxes: 0, // if you have extra boxes in model, replace this
+                        //   totalValue: value,
+                        // ),
                         const SizedBox(height: 16),
                         _orderItemsCard(m),
                         const SizedBox(height: 16),
@@ -159,67 +228,88 @@ class _CustomerDeliveryScreenState extends State<CustomerDeliveryScreen> {
                         ),
                         const SizedBox(height: 16),
 
-                        // Photo section
-                        _photoSection(),
-                        const SizedBox(height: 16),
+                        BlocConsumer<PaymentCubit, PaymentStates>(
+                          listener: (context, state) {
+                            if (state is PaymentCreated) {
+                            } else if (state is PaymentVerified) {}
+                          },
+                          builder: (context, state) {
+                            return CustomAppButton1(
+                              text: "Create Payment",
+                              isLoading: state is PaymentLoading,
+                              onPlusTap: () {
+                                Map<String, dynamic> data = {
+                                  "order_id": order_id,
+                                };
+                                context.read<PaymentCubit>().createPayment(
+                                  data,
+                                );
+                              },
+                            );
+                          },
+                        ),
+
+                        // // Photo section
+                        // _photoSection(),
+                        // const SizedBox(height: 16),
 
                         // // QR section (keep static or wire to your payment info)
                         // _qrSection(),
                         // const SizedBox(height: 16),
 
                         // Submit
-                        BlocConsumer<
-                          UpdateOrderStatusCubit,
-                          UpdateOrderStatusStates
-                        >(
-                          listener: (context, state) {
-                            if (state is UpdateOrderStatusUpdated) {
-                              context
-                                  .read<AssignedOrdersCubit>()
-                                  .fetchAssignedOrders();
-                              CustomSnackBar1.show(
-                                context,
-                                state.successModel.message ?? "",
-                              );
-                              context.pop();
-                            } else if (state is UpdateOrderStatusFailure) {
-                              CustomSnackBar1.show(context, state.error);
-                            }
-                          },
-                          builder: (context, state) {
-                            final isLoading = state is UpdateOrderStatusLoading;
-                            return ElevatedButton.icon(
-                              onPressed: (_otpVerified && _photoFile != null)
-                                  ? () {
-                                      Map<String, dynamic> data = {
-                                        "order_status": "delivered",
-                                        "delivery_image": _photoFile?.path,
-                                      };
-                                      context
-                                          .read<UpdateOrderStatusCubit>()
-                                          .updateOrderStatus(
-                                            widget.order_id,
-                                            data,
-                                          );
-                                    }
-                                  : null,
-                              style: ElevatedButton.styleFrom(
-                                minimumSize: const Size(double.infinity, 48),
-                                backgroundColor: primarycolor,
-                              ),
-                              label: isLoading
-                                  ? Center(
-                                      child: CircularProgressIndicator(
-                                        color: Colors.white,
-                                      ),
-                                    )
-                                  : const Text(
-                                      'Submit & Complete Delivery',
-                                      style: TextStyle(color: Colors.white),
-                                    ),
-                            );
-                          },
-                        ),
+                        // BlocConsumer<
+                        //   UpdateOrderStatusCubit,
+                        //   UpdateOrderStatusStates
+                        // >(
+                        //   listener: (context, state) {
+                        //     if (state is UpdateOrderStatusUpdated) {
+                        //       context
+                        //           .read<AssignedOrdersCubit>()
+                        //           .fetchAssignedOrders();
+                        //       CustomSnackBar1.show(
+                        //         context,
+                        //         state.successModel.message ?? "",
+                        //       );
+                        //       context.pop();
+                        //     } else if (state is UpdateOrderStatusFailure) {
+                        //       CustomSnackBar1.show(context, state.error);
+                        //     }
+                        //   },
+                        //   builder: (context, state) {
+                        //     final isLoading = state is UpdateOrderStatusLoading;
+                        //     return ElevatedButton.icon(
+                        //       onPressed: (_otpVerified && _photoFile != null)
+                        //           ? () {
+                        //               Map<String, dynamic> data = {
+                        //                 "order_status": "delivered",
+                        //                 "delivery_image": _photoFile?.path,
+                        //               };
+                        //               context
+                        //                   .read<UpdateOrderStatusCubit>()
+                        //                   .updateOrderStatus(
+                        //                     widget.order_id,
+                        //                     data,
+                        //                   );
+                        //             }
+                        //           : null,
+                        //       style: ElevatedButton.styleFrom(
+                        //         minimumSize: const Size(double.infinity, 48),
+                        //         backgroundColor: primarycolor,
+                        //       ),
+                        //       label: isLoading
+                        //           ? Center(
+                        //               child: CircularProgressIndicator(
+                        //                 color: Colors.white,
+                        //               ),
+                        //             )
+                        //           : const Text(
+                        //               'Submit & Complete Delivery',
+                        //               style: TextStyle(color: Colors.white),
+                        //             ),
+                        //     );
+                        //   },
+                        // ),
                         const SizedBox(height: 24),
                       ],
                     ),
@@ -293,15 +383,9 @@ class _CustomerDeliveryScreenState extends State<CustomerDeliveryScreen> {
               context,
               MaterialPageRoute(builder: (_) => const QrScannerScreen()),
             );
-
+            print("scannedCode: $scannedCode");
             if (scannedCode != null) {
-              // Handle scanned product code
-              print("Scanned Product: $scannedCode");
-
-              // Example: Navigate to product details screen or update a field
-              // Navigator.push(context, MaterialPageRoute(
-              //   builder: (_) => ProductDetailsScreen(productId: scannedCode),
-              // ));
+              _handleScannedCode(scannedCode);
             }
           },
           icon: Icon(Icons.qr_code, color: Colors.white),
@@ -411,7 +495,7 @@ class _CustomerDeliveryScreenState extends State<CustomerDeliveryScreen> {
   }
 
   Widget _orderItemsCard(AssignedOrdersDetailsModel m) {
-    final items = m.data?.orders ?? const <Orders>[];
+    final items = m.data?.packDetails ?? const <PackDetails>[];
     return Container(
       width: double.infinity,
       decoration: BoxDecoration(
@@ -423,43 +507,70 @@ class _CustomerDeliveryScreenState extends State<CustomerDeliveryScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Text(
-            'Order Items',
+            'Order Packs',
             style: TextStyle(fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 8),
           Wrap(
             spacing: 8,
             runSpacing: 8,
-            children: items.map((o) {
-              final q = o.quantity ?? 0;
-              final amt = o.totalAmount ?? '0.00';
-              return Container(
-                width: 140,
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: Colors.grey.shade300),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      o.productName ?? '—',
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(fontWeight: FontWeight.bold),
+            children: List.generate(items.length, (i) {
+              final o = items[i];
+              final delivered = _packsDelivered[i];
+              order_id = o.order?.id ?? "";
+              return Stack(
+                children: [
+                  Container(
+                    width: 140,
+                    height: 100,
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(
+                        color: delivered ? Colors.green : Colors.grey.shade300,
+                        width: delivered ? 2 : 1,
+                      ),
                     ),
-                    const SizedBox(height: 6),
-                    Text('Qty: $q'),
-                    Text(
-                      'Amount: ₹$amt',
-                      style: const TextStyle(color: Colors.green),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          o.code ?? '—',
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            fontWeight: FontWeight.w500,
+                            color: delivered ? Colors.green : Colors.black,
+                          ),
+                        ),
+                        const SizedBox(height: 6),
+                        if (delivered)
+                          const Text(
+                            'Scanned',
+                            style: TextStyle(
+                              color: Colors.green,
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                      ],
                     ),
-                  ],
-                ),
+                  ),
+                  if (delivered)
+                    const Positioned(
+                      top: 6,
+                      right: 6,
+                      child: Icon(
+                        Icons.check_circle,
+                        color: Colors.green,
+                        size: 20,
+                      ),
+                    ),
+                ],
               );
-            }).toList(),
+            }),
           ),
         ],
       ),
@@ -468,6 +579,11 @@ class _CustomerDeliveryScreenState extends State<CustomerDeliveryScreen> {
 
   // ============ OTP ============
   Widget _otpSection({required String orderId, required String mobile}) {
+    // ✅ Hide OTP section until all packs delivered
+    if (_packsDelivered.isEmpty || !_packsDelivered.every((v) => v)) {
+      return const SizedBox.shrink();
+    }
+
     return BlocConsumer<CustomerGenerateOtpCubit, CustomerGenerateOtpStates>(
       listener: (context, state) {
         if (state is CustomerGenerateOtpGenerated) {

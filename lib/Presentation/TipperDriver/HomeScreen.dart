@@ -169,7 +169,7 @@ class _HomescreenState extends State<HomeScreen> {
                       return InkWell(
                         onTap: () {
                           context.push(
-                            "/distribute_locations?dcm_assignmentID=${r.id}",
+                            "/distribute_locations?dcm_assignmentID=${r.dcmAssignment?.id??""}",
                           );
                         },
                         child: _locationCard(

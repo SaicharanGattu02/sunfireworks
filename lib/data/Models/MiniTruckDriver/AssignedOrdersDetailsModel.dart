@@ -8,13 +8,13 @@ class AssignedOrdersDetailsModel {
   AssignedOrdersDetailsModel.fromJson(Map<String, dynamic> json) {
     success = json['success'];
     message = json['message'];
-    data = json['data'] != null ? new Data.fromJson(json['data']) : null;
+    data = json['data'] != null ? Data.fromJson(json['data']) : null;
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['success'] = this.success;
-    data['message'] = this.message;
+    final Map<String, dynamic> data = {};
+    data['success'] = success;
+    data['message'] = message;
     if (this.data != null) {
       data['data'] = this.data!.toJson();
     }
@@ -32,6 +32,8 @@ class Data {
   String? totalAmount;
   List<OrderedCustomer>? orderedCustomer;
   List<Orders>? orders;
+  bool? isPackCreated;
+  List<PackDetails>? packDetails;
 
   Data({
     this.orderId,
@@ -43,6 +45,8 @@ class Data {
     this.totalAmount,
     this.orderedCustomer,
     this.orders,
+    this.isPackCreated,
+    this.packDetails,
   });
 
   Data.fromJson(Map<String, dynamic> json) {
@@ -53,36 +57,46 @@ class Data {
     shippingCharge = json['shipping_charge'];
     taxAmount = json['tax_amount'];
     totalAmount = json['total_amount'];
+    isPackCreated = json['is_pack_created'];
     if (json['ordered_customer'] != null) {
       orderedCustomer = <OrderedCustomer>[];
       json['ordered_customer'].forEach((v) {
-        orderedCustomer!.add(new OrderedCustomer.fromJson(v));
+        orderedCustomer!.add(OrderedCustomer.fromJson(v));
       });
     }
     if (json['orders'] != null) {
       orders = <Orders>[];
       json['orders'].forEach((v) {
-        orders!.add(new Orders.fromJson(v));
+        orders!.add(Orders.fromJson(v));
+      });
+    }
+    if (json['pack_details'] != null) {
+      packDetails = <PackDetails>[];
+      json['pack_details'].forEach((v) {
+        packDetails!.add(PackDetails.fromJson(v));
       });
     }
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['order_id'] = this.orderId;
-    data['order_status'] = this.orderStatus;
-    data['confirmed_through'] = this.confirmedThrough;
-    data['sub_total'] = this.subTotal;
-    data['shipping_charge'] = this.shippingCharge;
-    data['tax_amount'] = this.taxAmount;
-    data['total_amount'] = this.totalAmount;
-    if (this.orderedCustomer != null) {
-      data['ordered_customer'] = this.orderedCustomer!
-          .map((v) => v.toJson())
-          .toList();
+    final Map<String, dynamic> data = {};
+    data['order_id'] = orderId;
+    data['order_status'] = orderStatus;
+    data['confirmed_through'] = confirmedThrough;
+    data['sub_total'] = subTotal;
+    data['shipping_charge'] = shippingCharge;
+    data['tax_amount'] = taxAmount;
+    data['total_amount'] = totalAmount;
+    data['is_pack_created'] = isPackCreated;
+    if (orderedCustomer != null) {
+      data['ordered_customer'] =
+          orderedCustomer!.map((v) => v.toJson()).toList();
     }
-    if (this.orders != null) {
-      data['orders'] = this.orders!.map((v) => v.toJson()).toList();
+    if (orders != null) {
+      data['orders'] = orders!.map((v) => v.toJson()).toList();
+    }
+    if (packDetails != null) {
+      data['pack_details'] = packDetails!.map((v) => v.toJson()).toList();
     }
     return data;
   }
@@ -117,19 +131,21 @@ class OrderedCustomer {
     city = json['city'];
     state = json['state'];
     pincode = json['pincode'];
-    location = json['location'].cast<double>();
+    if (json['location'] != null) {
+      location = List<double>.from(json['location'].map((x) => x.toDouble()));
+    }
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['customer_name'] = this.customerName;
-    data['mobile'] = this.mobile;
-    data['email'] = this.email;
-    data['address'] = this.address;
-    data['city'] = this.city;
-    data['state'] = this.state;
-    data['pincode'] = this.pincode;
-    data['location'] = this.location;
+    final Map<String, dynamic> data = {};
+    data['customer_name'] = customerName;
+    data['mobile'] = mobile;
+    data['email'] = email;
+    data['address'] = address;
+    data['city'] = city;
+    data['state'] = state;
+    data['pincode'] = pincode;
+    data['location'] = location;
     return data;
   }
 }
@@ -148,10 +164,106 @@ class Orders {
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['product_name'] = this.productName;
-    data['quantity'] = this.quantity;
-    data['total_amount'] = this.totalAmount;
+    final Map<String, dynamic> data = {};
+    data['product_name'] = productName;
+    data['quantity'] = quantity;
+    data['total_amount'] = totalAmount;
+    return data;
+  }
+}
+
+class PackDetails {
+  String? id;
+  PackOrder? order;
+  List<PackItem>? individualItems;
+  List<PackItem>? comboItems;
+  String? qrCode;
+  String? code;
+
+  PackDetails({
+    this.id,
+    this.order,
+    this.individualItems,
+    this.comboItems,
+    this.qrCode,
+    this.code,
+  });
+
+  PackDetails.fromJson(Map<String, dynamic> json) {
+    id = json['id'];
+    order = json['order'] != null ? PackOrder.fromJson(json['order']) : null;
+    if (json['individual_items'] != null) {
+      individualItems = <PackItem>[];
+      json['individual_items'].forEach((v) {
+        individualItems!.add(PackItem.fromJson(v));
+      });
+    }
+    if (json['combo_items'] != null) {
+      comboItems = <PackItem>[];
+      json['combo_items'].forEach((v) {
+        comboItems!.add(PackItem.fromJson(v));
+      });
+    }
+    qrCode = json['qr_code'];
+    code = json['code'];
+  }
+
+  Map<String, dynamic> toJson() {
+    final Map<String, dynamic> data = {};
+    data['id'] = id;
+    if (order != null) {
+      data['order'] = order!.toJson();
+    }
+    if (individualItems != null) {
+      data['individual_items'] =
+          individualItems!.map((v) => v.toJson()).toList();
+    }
+    if (comboItems != null) {
+      data['combo_items'] = comboItems!.map((v) => v.toJson()).toList();
+    }
+    data['qr_code'] = qrCode;
+    data['code'] = code;
+    return data;
+  }
+}
+
+class PackOrder {
+  String? id;
+  String? orderId;
+  String? orderStatus;
+
+  PackOrder({this.id, this.orderId, this.orderStatus});
+
+  PackOrder.fromJson(Map<String, dynamic> json) {
+    id = json['id'];
+    orderId = json['order_id'];
+    orderStatus = json['order_status'];
+  }
+
+  Map<String, dynamic> toJson() {
+    final Map<String, dynamic> data = {};
+    data['id'] = id;
+    data['order_id'] = orderId;
+    data['order_status'] = orderStatus;
+    return data;
+  }
+}
+
+class PackItem {
+  String? id;
+  String? name;
+
+  PackItem({this.id, this.name});
+
+  PackItem.fromJson(Map<String, dynamic> json) {
+    id = json['id'];
+    name = json['name'];
+  }
+
+  Map<String, dynamic> toJson() {
+    final Map<String, dynamic> data = {};
+    data['id'] = id;
+    data['name'] = name;
     return data;
   }
 }

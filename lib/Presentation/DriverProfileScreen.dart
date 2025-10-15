@@ -6,6 +6,7 @@ import 'package:sunfireworks/Components/CustomAppButton.dart';
 import '../data/bloc/cubits/UserDetails/UserDetailsCubit.dart';
 import '../data/bloc/cubits/UserDetails/UserDetailsStates.dart';
 import '../services/AuthService.dart';
+import '../utils/AppLogger.dart';
 import '../utils/color_constants.dart';
 
 class DriverProfileScreen extends StatefulWidget {
@@ -69,205 +70,222 @@ class _DriverProfileScreenState extends State<DriverProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.grey[50],
-      appBar: AppBar(
-        elevation: 0,
-        backgroundColor: Colors.grey[50],
-        centerTitle: true,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.black),
-          onPressed: () => Navigator.of(context).maybePop(),
-        ),
-        title: const Text(
-          "Driver profile",
-          style: TextStyle(
-            fontFamily: "roboto",
-            color: Colors.black,
-            fontWeight: FontWeight.w600,
-            fontSize: 18,
-          ),
-        ),
-      ),
-      body: BlocBuilder<UserDetailsCubit, UserDetailsStates>(
-        builder: (context, state) {
-          if (state is UserDetailsLoading) {
-            return const Center(child: CircularProgressIndicator());
-          }
-
-          if (state is UserDetailsFailure) {
-            return _ErrorView(
-              message: state.error,
-              onRetry: () =>
-                  context.read<UserDetailsCubit>().fetchUserDetails(),
-            );
-          }
-
-          if (state is UserDetailsLoaded) {
-            final d = state.userDetailsModel.data;
-            final name = d?.fullName ?? "—";
-            final mobile = d?.mobile ?? "—";
-            final email = d?.email ?? "—";
-            final role = d?.userRole ?? "—";
-            final gender = _cap(d?.gender);
-            final dob = _formatDate(d?.dateOfBirth);
-            final avatar = d?.image;
-
-            return SingleChildScrollView(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Profile Card (now using network image + data)
-                  Container(
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(12),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.grey.shade200,
-                          blurRadius: 6,
-                          offset: const Offset(0, 3),
-                        ),
-                      ],
-                    ),
-                    child: Row(
-                      children: [
-                        CircleAvatar(
-                          radius: 32,
-                          backgroundColor: Colors.grey[200],
-                          backgroundImage: (avatar != null && avatar.isNotEmpty)
-                              ? NetworkImage(avatar)
-                              : null,
-                          child: (avatar == null || avatar.isEmpty)
-                              ? const Icon(
-                                  Icons.person,
-                                  size: 32,
-                                  color: Colors.grey,
-                                )
-                              : null,
-                        ),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                name,
-                                style: const TextStyle(
-                                  fontFamily: "roboto",
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                              const SizedBox(height: 4),
-                              Row(
-                                children: [
-                                  const Icon(Icons.phone, size: 16),
-                                  const SizedBox(width: 6),
-                                  Text(
-                                    mobile,
-                                    style: const TextStyle(
-                                      fontFamily: "roboto",
-                                      fontSize: 14,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              const SizedBox(height: 4),
-                              Row(
-                                children: [
-                                  const Icon(Icons.badge, size: 16),
-                                  const SizedBox(width: 6),
-                                  Text(
-                                    role, // using user_role as "designation"
-                                    style: const TextStyle(
-                                      fontFamily: "roboto",
-                                      fontSize: 14,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 20),
-
-                  // Personal Details (replaces your "Current Details" with real fields)
-                  SectionCard(
-                    title: "Personal Details",
-                    children: [
-                      _infoRow(
-                        icon: Icons.mail_outline,
-                        label: "Email",
-                        value: email,
-                        color: Colors.blue,
-                      ),
-                      const SizedBox(height: 10),
-                      _infoRow(
-                        icon: Icons.person_outline,
-                        label: "Gender",
-                        value: gender,
-                        color: Colors.purple,
-                      ),
-                      const SizedBox(height: 10),
-                      _infoRow(
-                        icon: Icons.cake_outlined,
-                        label: "Date of Birth",
-                        value: dob,
-                        color: Colors.orange,
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 20),
-
-                  // Work Info (no counts in payload, show as em-dash)
-                  SectionCard(
-                    title: "Work Info",
-                    children: [
-                      DriverProfileScreen._workRow(
-                        "Total Deliveries",
-                        "—",
-                        Icons.check_circle,
-                        Colors.green,
-                      ),
-                      const SizedBox(height: 12),
-                      DriverProfileScreen._workRow(
-                        "Active Orders",
-                        "—",
-                        Icons.assignment_outlined,
-                        Colors.orange,
-                      ),
-                      const SizedBox(height: 12),
-                      DriverProfileScreen._workRow(
-                        "Extra Boxes Delivered",
-                        "—",
-                        Icons.card_giftcard,
-                        Colors.purple,
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 20),
-                  CustomAppButton1(
-                    text: "Log Out",
-                    onPlusTap: () {
-                      showLogoutDialog(context);
-                    },
-                    color: Color(0xffFF4646),
-                  ),
-                ],
+    return FutureBuilder(
+        future: AuthService.getRole(),
+      builder: (context, asyncSnapshot) {
+        final role = asyncSnapshot.data ?? "";
+        AppLogger.info("role: ${role}");
+        return Scaffold(
+          backgroundColor: Colors.grey[50],
+          appBar: AppBar(
+            elevation: 0,
+            backgroundColor: Colors.grey[50],
+            centerTitle: true,
+            leading: IconButton(
+              icon: const Icon(Icons.arrow_back, color: Colors.black),
+              onPressed: () => Navigator.of(context).maybePop(),
+            ),
+            title: const Text(
+              "Driver profile",
+              style: TextStyle(
+                fontFamily: "roboto",
+                color: Colors.black,
+                fontWeight: FontWeight.w600,
+                fontSize: 18,
               ),
-            );
-          }
+            ),
+            actions: [
+              IconButton(
+                onPressed: role == "dcm_driver" ? () {
+                  context.push("/dcm_polyline");
+                }:(){
+                  context.push("/car_polyline");
+                },
+                icon: Icon(Icons.route,color: Colors.black,),
+              ),
+            ],
+          ),
+          body: BlocBuilder<UserDetailsCubit, UserDetailsStates>(
+            builder: (context, state) {
+              if (state is UserDetailsLoading) {
+                return const Center(child: CircularProgressIndicator());
+              }
 
-          // Fallback (shouldn’t hit)
-          return const SizedBox.shrink();
-        },
-      ),
+              if (state is UserDetailsFailure) {
+                return _ErrorView(
+                  message: state.error,
+                  onRetry: () =>
+                      context.read<UserDetailsCubit>().fetchUserDetails(),
+                );
+              }
+
+              if (state is UserDetailsLoaded) {
+                final d = state.userDetailsModel.data;
+                final name = d?.fullName ?? "—";
+                final mobile = d?.mobile ?? "—";
+                final email = d?.email ?? "—";
+                final role = d?.userRole ?? "—";
+                final gender = _cap(d?.gender);
+                final dob = _formatDate(d?.dateOfBirth);
+                final avatar = d?.image;
+
+                return SingleChildScrollView(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Profile Card (now using network image + data)
+                      Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(12),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.grey.shade200,
+                              blurRadius: 6,
+                              offset: const Offset(0, 3),
+                            ),
+                          ],
+                        ),
+                        child: Row(
+                          children: [
+                            CircleAvatar(
+                              radius: 32,
+                              backgroundColor: Colors.grey[200],
+                              backgroundImage: (avatar != null && avatar.isNotEmpty)
+                                  ? NetworkImage(avatar)
+                                  : null,
+                              child: (avatar == null || avatar.isEmpty)
+                                  ? const Icon(
+                                      Icons.person,
+                                      size: 32,
+                                      color: Colors.grey,
+                                    )
+                                  : null,
+                            ),
+                            const SizedBox(width: 16),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    name,
+                                    style: const TextStyle(
+                                      fontFamily: "roboto",
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Row(
+                                    children: [
+                                      const Icon(Icons.phone, size: 16),
+                                      const SizedBox(width: 6),
+                                      Text(
+                                        mobile,
+                                        style: const TextStyle(
+                                          fontFamily: "roboto",
+                                          fontSize: 14,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Row(
+                                    children: [
+                                      const Icon(Icons.badge, size: 16),
+                                      const SizedBox(width: 6),
+                                      Text(
+                                        role, // using user_role as "designation"
+                                        style: const TextStyle(
+                                          fontFamily: "roboto",
+                                          fontSize: 14,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 20),
+
+                      // Personal Details (replaces your "Current Details" with real fields)
+                      SectionCard(
+                        title: "Personal Details",
+                        children: [
+                          _infoRow(
+                            icon: Icons.mail_outline,
+                            label: "Email",
+                            value: email,
+                            color: Colors.blue,
+                          ),
+                          const SizedBox(height: 10),
+                          _infoRow(
+                            icon: Icons.person_outline,
+                            label: "Gender",
+                            value: gender,
+                            color: Colors.purple,
+                          ),
+                          const SizedBox(height: 10),
+                          _infoRow(
+                            icon: Icons.cake_outlined,
+                            label: "Date of Birth",
+                            value: dob,
+                            color: Colors.orange,
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 20),
+
+                      // Work Info (no counts in payload, show as em-dash)
+                      SectionCard(
+                        title: "Work Info",
+                        children: [
+                          DriverProfileScreen._workRow(
+                            "Total Deliveries",
+                            "—",
+                            Icons.check_circle,
+                            Colors.green,
+                          ),
+                          const SizedBox(height: 12),
+                          DriverProfileScreen._workRow(
+                            "Active Orders",
+                            "—",
+                            Icons.assignment_outlined,
+                            Colors.orange,
+                          ),
+                          const SizedBox(height: 12),
+                          DriverProfileScreen._workRow(
+                            "Extra Boxes Delivered",
+                            "—",
+                            Icons.card_giftcard,
+                            Colors.purple,
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 20),
+                      CustomAppButton1(
+                        text: "Log Out",
+                        onPlusTap: () {
+                          showLogoutDialog(context);
+                        },
+                        color: Color(0xffFF4646),
+                      ),
+                    ],
+                  ),
+                );
+              }
+
+              // Fallback (shouldn’t hit)
+              return const SizedBox.shrink();
+            },
+          ),
+        );
+      }
     );
   }
 
@@ -291,7 +309,6 @@ class _DriverProfileScreenState extends State<DriverProfileScreen> {
       ],
     );
   }
-
 
   void showLogoutDialog(BuildContext context) {
     showDialog(

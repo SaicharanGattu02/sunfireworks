@@ -5,12 +5,18 @@ import 'package:sunfireworks/data/bloc/cubits/MiniTruckDriver/AssignedOrders/Ass
 import 'package:sunfireworks/data/bloc/cubits/MiniTruckDriver/AssignedOrders/AssignedOrdersRepo.dart';
 import 'package:sunfireworks/data/bloc/cubits/MiniTruckDriver/AssignedOrdersDetails/AssignedOrdersDetailsCubit.dart';
 import 'package:sunfireworks/data/bloc/cubits/MiniTruckDriver/AssignedOrdersDetails/AssignedOrdersDetailsRepo.dart';
+import 'package:sunfireworks/data/bloc/cubits/MiniTruckDriver/CarPolyline/CarPolylineCubit.dart';
+import 'package:sunfireworks/data/bloc/cubits/MiniTruckDriver/CarPolyline/CarPolylineRepo.dart';
 import 'package:sunfireworks/data/bloc/cubits/MiniTruckDriver/CustomerGenerateOTP/CustomerGenerateOtpCubit.dart';
 import 'package:sunfireworks/data/bloc/cubits/MiniTruckDriver/CustomerGenerateOTP/CustomerGenerateOtpRepo.dart';
+import 'package:sunfireworks/data/bloc/cubits/MiniTruckDriver/Payment/PaymentCubit.dart';
+import 'package:sunfireworks/data/bloc/cubits/MiniTruckDriver/Payment/PaymentRepo.dart';
 import 'package:sunfireworks/data/bloc/cubits/MiniTruckDriver/UpdateOrderStatus/UpdateOrderStatusCubit.dart';
 import 'package:sunfireworks/data/bloc/cubits/MiniTruckDriver/UpdateOrderStatus/UpdateOrderStatusRepo.dart';
 import 'package:sunfireworks/data/bloc/cubits/TipperDriver/CarDriverOTP/CarDriverOTPCubit.dart';
 import 'package:sunfireworks/data/bloc/cubits/TipperDriver/CarDriverOTP/CarDriverOTPRepo.dart';
+import 'package:sunfireworks/data/bloc/cubits/TipperDriver/DCMPolyline/DCMPolylineCubit.dart';
+import 'package:sunfireworks/data/bloc/cubits/TipperDriver/DCMPolyline/DCMPolylineRepo.dart';
 import 'package:sunfireworks/data/bloc/cubits/TipperDriver/DriverAssignment/driver_assignment_cubit.dart';
 import 'package:sunfireworks/data/bloc/cubits/TipperDriver/DriverAssignment/driver_assignment_repo.dart';
 import 'package:sunfireworks/data/bloc/cubits/TipperDriver/DriverDetails/DriverDetailsCubit.dart';
@@ -84,6 +90,21 @@ class StateInjector {
         remoteDataSource: context.read<RemoteDataSource>(),
       ),
     ),
+    RepositoryProvider<PaymentRepo>(
+      create: (context) => PaymentRepoImpl(
+        remoteDataSource: context.read<RemoteDataSource>(),
+      ),
+    ),
+    RepositoryProvider<CarPolylineRepo>(
+      create: (context) => CarPolylineRepoImpl(
+        remoteDataSource: context.read<RemoteDataSource>(),
+      ),
+    ),
+    RepositoryProvider<DCMPolylineRepo>(
+      create: (context) => DCMPolylineRepoImpl(
+        remoteDataSource: context.read<RemoteDataSource>(),
+      ),
+    ),
   ];
 
   static final blocProviders = <BlocProvider>[
@@ -121,6 +142,15 @@ class StateInjector {
     ),
     BlocProvider<StockTransferCubit>(
       create: (context) => StockTransferCubit(context.read<StockTransferRepo>()),
+    ),
+    BlocProvider<PaymentCubit>(
+      create: (context) => PaymentCubit(context.read<PaymentRepo>()),
+    ),
+    BlocProvider<CarPolylineCubit>(
+      create: (context) => CarPolylineCubit(context.read<CarPolylineRepo>()),
+    ),
+    BlocProvider<DCMPolylineCubit>(
+      create: (context) => DCMPolylineCubit(context.read<DCMPolylineRepo>()),
     ),
   ];
 }

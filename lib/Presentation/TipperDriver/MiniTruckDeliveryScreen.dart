@@ -341,14 +341,13 @@ class _MiniTruckDeliveryScreenState extends State<MiniTruckDeliveryScreen> {
                               ];
 
                               final data = {
+                                "car_assignment": assignedCar.id,
                                 "dcm_assignment": widget.dcm_assignmentID,
                                 "bags": deliveredBagIds,
                                 "packs": deliveredPackIds,
                                 "photo": _photoFile?.path,
                               };
-
                               print("📦 Payload: $data");
-
                               context
                                   .read<StockTransferCubit>()
                                   .stockTransferApi(data);
@@ -420,7 +419,7 @@ class _MiniTruckDeliveryScreenState extends State<MiniTruckDeliveryScreen> {
                         ),
                         const SizedBox(width: 4),
                         Text(
-                          car.selectedPoint??"",
+                          car.selectedPoint ?? "",
                           style: const TextStyle(
                             fontSize: 13,
                             color: Colors.black87,

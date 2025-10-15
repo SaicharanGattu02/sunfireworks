@@ -25,6 +25,7 @@ class _DashboardState extends State<Dashboard> {
   late PageController pageController;
   int _selectedIndex = 0;
   static const platform = MethodChannel('com.sunfireworks/location');
+
   @override
   void initState() {
     super.initState();
@@ -93,7 +94,7 @@ class _DashboardState extends State<Dashboard> {
                 physics: const NeverScrollableScrollPhysics(),
               ),
             ),
-            bottomNavigationBar: _buildBottomNavigationBar(),
+            bottomNavigationBar: SafeArea(child: _buildBottomNavigationBar()),
           ),
         );
       },
@@ -101,75 +102,59 @@ class _DashboardState extends State<Dashboard> {
   }
 
   Widget _buildBottomNavigationBar() {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: const BorderRadius.only(
-          topLeft: Radius.circular(20.0),
-          topRight: Radius.circular(20.0),
-        ),
-        boxShadow: [
-          BoxShadow(
-            offset: const Offset(0, -1),
-            blurRadius: 10,
-            color: Colors.grey.withOpacity(0.3),
-          ),
-        ],
+    return BottomNavigationBar(
+      selectedLabelStyle: TextStyle(
+        fontFamily: 'roboto',
+        fontSize: 12,
+        fontWeight: FontWeight.w500,
+        color: Colors.black,
       ),
-      child: BottomNavigationBar(
-        selectedLabelStyle: TextStyle(
-          fontFamily: 'roboto',
-          fontSize: 12,
-          fontWeight: FontWeight.w500,
-          color: Colors.black,
-        ),
-        unselectedLabelStyle: TextStyle(
-          fontFamily: 'roboto',
-          fontSize: 12,
-          fontWeight: FontWeight.w400,
-          color: Color(0xff994D52),
-        ),
-        type: BottomNavigationBarType.fixed,
-        backgroundColor: Colors.white,
-        selectedItemColor: Colors.black,
-        unselectedItemColor: Colors.black,
-        selectedFontSize: 12.0,
-        unselectedFontSize: 12.0,
-        showSelectedLabels: true,
-        showUnselectedLabels: true,
-        elevation: 0,
-        currentIndex: _selectedIndex,
-        onTap: onItemTapped,
-        items: [
-          BottomNavigationBarItem(
-            label: "Home",
-            icon: Image.asset(
-              "assets/images/home.png",
-              width: 25,
-              height: 25,
-              color: _selectedIndex == 0 ? Colors.black : Color(0xff994D52),
-            ),
-          ),
-          // BottomNavigationBarItem(
-          //   label: "Orders",
-          //   icon: Image.asset(
-          //     "assets/images/orders.png",
-          //     width: 25,
-          //     height: 25,
-          //     color: _selectedIndex == 1 ? Colors.black : Color(0xff994D52),
-          //   ),
-          // ),
-          BottomNavigationBarItem(
-            label: "Profile",
-            icon: Image.asset(
-              "assets/images/profile.png",
-              width: 25,
-              height: 25,
-              color: _selectedIndex == 2 ? Colors.black : Color(0xff994D52),
-            ),
-          ),
-        ],
+      unselectedLabelStyle: TextStyle(
+        fontFamily: 'roboto',
+        fontSize: 12,
+        fontWeight: FontWeight.w400,
+        color: Color(0xff994D52),
       ),
+      type: BottomNavigationBarType.fixed,
+      backgroundColor: Colors.white,
+      selectedItemColor: Colors.black,
+      unselectedItemColor: Colors.black,
+      selectedFontSize: 12.0,
+      unselectedFontSize: 12.0,
+      showSelectedLabels: true,
+      showUnselectedLabels: true,
+      elevation: 0,
+      currentIndex: _selectedIndex,
+      onTap: onItemTapped,
+      items: [
+        BottomNavigationBarItem(
+          label: "Home",
+          icon: Image.asset(
+            "assets/images/home.png",
+            width: 25,
+            height: 25,
+            color: _selectedIndex == 0 ? Colors.black : Color(0xff994D52),
+          ),
+        ),
+        // BottomNavigationBarItem(
+        //   label: "Orders",
+        //   icon: Image.asset(
+        //     "assets/images/orders.png",
+        //     width: 25,
+        //     height: 25,
+        //     color: _selectedIndex == 1 ? Colors.black : Color(0xff994D52),
+        //   ),
+        // ),
+        BottomNavigationBarItem(
+          label: "Profile",
+          icon: Image.asset(
+            "assets/images/profile.png",
+            width: 25,
+            height: 25,
+            color: _selectedIndex == 2 ? Colors.black : Color(0xff994D52),
+          ),
+        ),
+      ],
     );
   }
 }

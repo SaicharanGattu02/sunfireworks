@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 import '../services/ApiClient.dart';
 import '../services/api_endpoint_urls.dart';
 import '../utils/AppLogger.dart';
+import 'Models/CreatePaymentOrderModel.dart';
 import 'Models/GenerateOTPModel.dart';
 import 'Models/MiniTruckDriver/AssignedOrdersDetailsModel.dart';
 import 'Models/MiniTruckDriver/AssignedOrdersModel.dart';
@@ -37,6 +38,8 @@ abstract class RemoteDataSource {
   Future<SuccessModel?> verifyCarDriverOTP(Map<String, dynamic> data);
   Future<SuccessModel?> stockTransferApi(Map<String, dynamic> data);
   Future<VerifyOTPModel?> testLogin(Map<String, dynamic> data);
+  Future<CreatePaymentOrderModel?> createPayment(Map<String, dynamic> data);
+  Future<CreatePaymentOrderModel?> verifyPayment(Map<String, dynamic> data);
 }
 
 class RemoteDataSourceImpl implements RemoteDataSource {
@@ -62,6 +65,41 @@ class RemoteDataSourceImpl implements RemoteDataSource {
     return FormData.fromMap(formMap);
   }
 
+  @override
+  Future<CreatePaymentOrderModel?> verifyPayment(
+    Map<String, dynamic> data,
+  ) async {
+    try {
+      final formdata = await buildFormData(data);
+      Response response = await ApiClient.post(
+        "${APIEndpointUrls.verif_razor_order}",
+        data: formdata,
+      );
+      AppLogger.log('verifyPayment:${response.data}');
+      return CreatePaymentOrderModel.fromJson(response.data);
+    } catch (e) {
+      AppLogger.error('verifyPayment :: $e');
+      return null;
+    }
+  }
+
+  @override
+  Future<CreatePaymentOrderModel?> createPayment(
+    Map<String, dynamic> data,
+  ) async {
+    try {
+      final formdata = await buildFormData(data);
+      Response response = await ApiClient.post(
+        "${APIEndpointUrls.create_razor_order}",
+        data: formdata,
+      );
+      AppLogger.log('createPayment:${response.data}');
+      return CreatePaymentOrderModel.fromJson(response.data);
+    } catch (e) {
+      AppLogger.error('createPayment :: $e');
+      return null;
+    }
+  }
 
   @override
   Future<VerifyOTPModel?> testLogin(Map<String, dynamic> data) async {
@@ -79,7 +117,6 @@ class RemoteDataSourceImpl implements RemoteDataSource {
       return null;
     }
   }
-
 
   @override
   Future<SuccessModel?> stockTransferApi(Map<String, dynamic> data) async {

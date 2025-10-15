@@ -7,8 +7,10 @@ import 'package:go_router/go_router.dart';
 import 'package:sunfireworks/Presentation/DashBoard.dart';
 import 'package:sunfireworks/Presentation/DeliveryMapScreen.dart';
 import 'package:sunfireworks/Presentation/DriverProfileScreen.dart';
+import 'package:sunfireworks/Presentation/MiniTruckDriver/CarPolylineScreen.dart';
 import 'package:sunfireworks/Presentation/MiniTruckDriver/CustomerDeliveryScreen.dart';
 import 'package:sunfireworks/Presentation/NoGPS.dart';
+import 'package:sunfireworks/Presentation/TipperDriver/DCMPolylineScreen.dart';
 import 'package:sunfireworks/Presentation/TipperDriver/DelivaryDetailsScreen.dart';
 import 'package:sunfireworks/Presentation/TipperDriver/HomeScreen.dart';
 import '../Components/NoInternet.dart';
@@ -61,6 +63,18 @@ final GoRouter appRouter = GoRouter(
       path: '/orders',
       pageBuilder: (context, state) {
         return buildSlideTransitionPage(OrdersScreen(), state);
+      },
+    ),
+    GoRoute(
+      path: '/car_polyline',
+      pageBuilder: (context, state) {
+        return buildSlideTransitionPage(CarPolylineScreen(), state);
+      },
+    ),
+    GoRoute(
+      path: '/dcm_polyline',
+      pageBuilder: (context, state) {
+        return buildSlideTransitionPage(DCMPolylineScreen(), state);
       },
     ),
     GoRoute(
