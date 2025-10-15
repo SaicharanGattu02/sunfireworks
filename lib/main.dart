@@ -16,8 +16,7 @@ import 'package:provider/provider.dart';
 import 'utils/AppLogger.dart';
 import 'firebase_options.dart';
 
-final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
-    FlutterLocalNotificationsPlugin();
+final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
 
 const AndroidNotificationChannel channel = AndroidNotificationChannel(
   'high_importance_channel',
@@ -89,8 +88,15 @@ Future<void> main() async {
     initializationSettings,
     onDidReceiveNotificationResponse: (resp) async {
       final p = resp.payload;
-      if (p?.isNotEmpty == true) {
-        final data = jsonDecode(p!) as Map<String, dynamic>;
+      if (p != null && p.isNotEmpty) {
+        try {
+          final data = jsonDecode(p) as Map<String, dynamic>;
+          print("Parsed notification payload: $data");
+        } catch (e) {
+          print("Error parsing notification payload: $e");
+        }
+      } else {
+        print("Empty or null notification payload");
       }
     },
   );
@@ -160,21 +166,20 @@ Future<void> _requestPushPermissions() async {
   }
 }
 
-// Function to display local notifications
 void showNotification(
-  RemoteNotification notification,
-  AndroidNotification android,
-  Map<String, dynamic> data,
-) async {
+    RemoteNotification notification,
+    AndroidNotification android,
+    Map<String, dynamic> data,
+    ) async {
   AndroidNotificationDetails androidPlatformChannelSpecifics =
-      AndroidNotificationDetails(
-        'high_importance_channel',
-        'High Importance Notifications',
-        importance: Importance.max,
-        priority: Priority.high,
-        playSound: true,
-        icon: '@mipmap/ic_launcher',
-      );
+  AndroidNotificationDetails(
+    'high_importance_channel',
+    'High Importance Notifications',
+    importance: Importance.max,
+    priority: Priority.high,
+    playSound: true,
+    icon: '@mipmap/ic_launcher',
+  );
   NotificationDetails platformChannelSpecifics = NotificationDetails(
     android: androidPlatformChannelSpecifics,
   );

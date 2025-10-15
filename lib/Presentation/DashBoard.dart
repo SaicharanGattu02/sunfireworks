@@ -151,7 +151,7 @@ class _DashboardState extends State<Dashboard> {
             "assets/images/profile.png",
             width: 25,
             height: 25,
-            color: _selectedIndex == 2 ? Colors.black : Color(0xff994D52),
+            color: _selectedIndex == 1 ? Colors.black : Color(0xff994D52),
           ),
         ),
       ],

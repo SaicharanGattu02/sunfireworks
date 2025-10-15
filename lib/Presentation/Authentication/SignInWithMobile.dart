@@ -37,44 +37,38 @@ class _SignInWithMobileState extends State<SignInWithMobile> {
   int denialCount = 0;
 
   Future<void> getLocationPermissions() async {
-    // Check if location services are enabled
     bool isLocationEnabled = await Geolocator.isLocationServiceEnabled();
-    // Check if the app has been granted location permission
     LocationPermission permission = await Geolocator.checkPermission();
-    bool hasLocationPermission =
-        permission == LocationPermission.always ||
-        permission == LocationPermission.whileInUse;
+    bool hasAlwaysPermission = permission == LocationPermission.always;
 
     try {
-      if (!isLocationEnabled || !hasLocationPermission) {
-        // Location services or permissions are not enabled, request permission
+      if (!isLocationEnabled || !hasAlwaysPermission) {
+        // Ask for location permissions
         permission = await Geolocator.requestPermission();
-        if (permission != LocationPermission.always &&
-            permission != LocationPermission.whileInUse) {
+
+        if (permission != LocationPermission.always) {
           denialCount++;
           if (denialCount >= 2) {
-            // Redirect user to app settings after denying twice
+            // User denied "Always" twice -> Redirect to Settings
             showDialog(
               context: context,
               builder: (BuildContext context) {
                 return AlertDialog(
-                  content: Text(
-                    'You have denied location permission twice. Please enable it in your app settings.',
+                  content: const Text(
+                    'This app requires "Always Allow" location access to track your live location even when the app is closed. Please enable it from Settings.',
                     style: TextStyle(fontSize: 15),
                   ),
                   actions: <Widget>[
                     TextButton(
                       style: ButtonStyle(
-                        backgroundColor: MaterialStateProperty.all(
-                          Colors.white,
-                        ),
+                        backgroundColor: MaterialStateProperty.all(Colors.white),
                         overlayColor: MaterialStateProperty.all(Colors.white),
                       ),
                       onPressed: () async {
                         Navigator.pop(context);
-                        openAppSettings(); // Redirect to app settings
+                        await openAppSettings(); // Open app settings
                       },
-                      child: Text(
+                      child: const Text(
                         'Open Settings',
                         style: TextStyle(fontSize: 15, color: Colors.cyan),
                       ),
@@ -84,28 +78,26 @@ class _SignInWithMobileState extends State<SignInWithMobile> {
               },
             );
           } else {
-            // Show retry dialog if not reached the limit
+            // Retry dialog
             showDialog(
               context: context,
               builder: (BuildContext context) {
                 return AlertDialog(
-                  content: Text(
-                    'Sun Fireworks uses this permission to detect your current location. Please enable your location permission.',
+                  content: const Text(
+                    'Sun Fireworks needs "Always Allow" location permission for continuous tracking. Please grant the permission.',
                     style: TextStyle(fontSize: 15),
                   ),
                   actions: <Widget>[
                     TextButton(
                       style: ButtonStyle(
-                        backgroundColor: MaterialStateProperty.all(
-                          Colors.white,
-                        ),
+                        backgroundColor: MaterialStateProperty.all(Colors.white),
                         overlayColor: MaterialStateProperty.all(Colors.white),
                       ),
                       onPressed: () async {
                         Navigator.pop(context);
-                        await getLocationPermissions();
+                        await getLocationPermissions(); // Retry
                       },
-                      child: Text(
+                      child: const Text(
                         'Retry',
                         style: TextStyle(fontSize: 15, color: Colors.cyan),
                       ),
@@ -117,18 +109,18 @@ class _SignInWithMobileState extends State<SignInWithMobile> {
           }
           return;
         } else {
-          // Request GPS permission if granted
+          // All good, request GPS service enable
           requestGpsPermission();
         }
       } else {
-        // Request GPS permission if location services and permission are enabled
+        // Already enabled and granted Always permission
         requestGpsPermission();
       }
     } catch (e, s) {
-      // Handle exception here
-      print('Error: $e\n$s');
+      print('Error requesting location permission: $e\n$s');
     }
   }
+
 
   Future<void> requestGpsPermission() async {
     // Check if the app has been granted location permission

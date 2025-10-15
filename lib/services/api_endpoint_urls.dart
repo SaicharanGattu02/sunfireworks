@@ -1,6 +1,6 @@
 class APIEndpointUrls {
-  static const String baseUrl = 'http://192.168.80.115:8090/';
-  // static const String baseUrl = 'https://api.crackersworld.online/';
+  // static const String baseUrl = 'http://192.168.80.115:8090/';
+  static const String baseUrl = 'https://api.crackersworld.online/';
   static const String apiUrl = 'api/';
   static const String authUrl = 'auth/';
   static const String driverUrl = 'driver/';

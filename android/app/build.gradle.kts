@@ -1,7 +1,7 @@
 plugins {
     id("com.android.application")
-    id("com.google.gms.google-services")
     id("org.jetbrains.kotlin.android")
+    id("com.google.gms.google-services")
     id("dev.flutter.flutter-gradle-plugin")
 }
 
@@ -20,28 +20,39 @@ android {
         jvmTarget = JavaVersion.VERSION_11.toString()
     }
 
-    signingConfigs {
-        create("release") {
-            keyAlias = "upload"
-            keyPassword = "sunfireworks"
-            storePassword = "sunfireworks"
-            storeFile = file("D:\\sunfireworks\\android\\app\\upload-keystore.jks")
-        }
-    }
-
     defaultConfig {
         applicationId = "com.crackersworld.android"
-        minSdkVersion(24) // Correct function syntax
+        minSdk = 24
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
     }
 
-    buildTypes {
-        release {
-            signingConfig = signingConfigs.getByName("release")
+    signingConfigs {
+        create("release") {
+            keyAlias = "upload"
+            keyPassword = "sunfireworks"
+            storePassword = "sunfireworks"
+            storeFile = file("D:/sunfireworks/android/app/upload-keystore.jks")
         }
     }
+
+    buildTypes {
+        getByName("debug") {
+            isMinifyEnabled = false
+        }
+
+        getByName("release") {
+            signingConfig = signingConfigs.getByName("release")
+            isMinifyEnabled = true
+            isShrinkResources = true
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro"
+            )
+        }
+    }
+
 }
 
 repositories {
@@ -51,23 +62,25 @@ repositories {
 }
 
 dependencies {
-    // Google Play Services Location
+    // Google Play Services Location (for background/live tracking)
     implementation("com.google.android.gms:play-services-location:21.3.0")
 
-    // WorkManager (only keep if you actually use it)
+    // WorkManager (for background jobs, optional)
     implementation("androidx.work:work-runtime:2.9.1")
 
-    // Retrofit + OkHttp
+    // Networking (Retrofit + OkHttp)
     implementation("com.squareup.retrofit2:retrofit:2.11.0")
     implementation("com.squareup.retrofit2:converter-gson:2.11.0")
     implementation("com.squareup.okhttp3:okhttp:4.12.0")
     implementation("com.squareup.okhttp3:logging-interceptor:4.12.0")
 
-    // Coroutines (REQUIRED for your LocationService)
+    // Coroutines (for async location updates)
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.8.1")
 
-    // Android KTX (handy extensions, recommended)
+    // Android KTX extensions
     implementation("androidx.core:core-ktx:1.13.1")
+
+    // Required for Java 8+ desugaring (for newer APIs)
     coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.4")
 }
 

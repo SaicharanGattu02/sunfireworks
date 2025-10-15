@@ -105,8 +105,19 @@ class _DCMPolylineScreenState extends State<DCMPolylineScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('DCM Route Path'),
-        backgroundColor: Colors.blueAccent,
+        leading: IconButton(
+          onPressed: () {},
+          icon: Icon(Icons.arrow_back, color: Colors.black),
+        ),
+        title: const Text(
+          'Driver Route History',
+          style: TextStyle(
+            fontFamily: "roboto",
+            color: Colors.black,
+            fontWeight: FontWeight.w600,
+            fontSize: 18,
+          ),
+        ),
       ),
       body: BlocConsumer<DCMPolylineCubit, DCMPolylineStates>(
         listener: (context, state) async {

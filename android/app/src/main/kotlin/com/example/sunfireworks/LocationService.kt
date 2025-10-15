@@ -36,16 +36,17 @@ import retrofit2.Response as RetrofitResponse
 import java.io.IOException
 import java.util.Locale
 
-
 class LocationService : Service() {
 
     private val CHANNEL_ID = "location_service_channel"
     private val NOTIF_ID = 1001
     private val TAG = "LocationService"
 
-    // Update every 3 seconds
-    private val UPDATE_INTERVAL_MS = 3_000L
-    private val FASTEST_INTERVAL_MS = 2_000L
+    // Updated intervals: 10 seconds for regular updates, 5 seconds for fastest
+    private val UPDATE_INTERVAL_MS = 10_000L
+    private val FASTEST_INTERVAL_MS = 5_000L
+    private var lastSentTime = 0L
+    private val MIN_SEND_INTERVAL_MS = 10_000L // Rate limit server requests to 10 seconds
 
     // Google location clients
     private lateinit var fusedLocationClient: FusedLocationProviderClient
@@ -77,7 +78,7 @@ class LocationService : Service() {
         super.onCreate()
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
 
-        // Configure for accurate location updates every 3 seconds
+        // Configure for accurate location updates every 10 seconds
         locationRequest = LocationRequest.Builder(
             Priority.PRIORITY_HIGH_ACCURACY,
             UPDATE_INTERVAL_MS
@@ -93,7 +94,12 @@ class LocationService : Service() {
                 val loc = result.lastLocation ?: return
                 Log.d(TAG, "📍 Location: ${loc.latitude}, ${loc.longitude}, acc=${loc.accuracy}")
 
-                // Send immediately to server
+                val currentTime = System.currentTimeMillis()
+                if (currentTime - lastSentTime < MIN_SEND_INTERVAL_MS) {
+                    Log.d(TAG, "⏳ Skipping location send; too soon.")
+                    return
+                }
+
                 serviceScope.launch {
                     val address = withContext(Dispatchers.IO) {
                         resolveAddress(loc.latitude, loc.longitude)
@@ -101,13 +107,50 @@ class LocationService : Service() {
 
                     Log.d(TAG, "Resolved address: $address")
 
-                    sendLocationToServer(
-                        lat = loc.latitude.toString(),
-                        lng = loc.longitude.toString()
-                    )
+                    try {
+                        sendLocationToServer(
+                            lat = loc.latitude.toString(),
+                            lng = loc.longitude.toString()
+                        )
+                        lastSentTime = currentTime
+                    } catch (e: Exception) {
+                        Log.e(TAG, "Error sending location: ${e.message}", e)
+                    }
                 }
             }
         }
+
+        // Alternative Flow-based approach (commented out; uncomment if preferred)
+        /*
+        val locationFlow = MutableSharedFlow<Location>(replay = 0)
+        locationCallback = object : LocationCallback() {
+            override fun onLocationResult(result: LocationResult) {
+                val loc = result.lastLocation ?: return
+                Log.d(TAG, "📍 Location: ${loc.latitude}, ${loc.longitude}, acc=${loc.accuracy}")
+                serviceScope.launch {
+                    locationFlow.emit(loc)
+                }
+            }
+        }
+        serviceScope.launch {
+            locationFlow
+                .throttle(10_000)
+                .collect { loc ->
+                    val address = withContext(Dispatchers.IO) {
+                        resolveAddress(loc.latitude, loc.longitude)
+                    }
+                    Log.d(TAG, "Resolved address: $address")
+                    try {
+                        sendLocationToServer(
+                            lat = loc.latitude.toString(),
+                            lng = loc.longitude.toString()
+                        )
+                    } catch (e: Exception) {
+                        Log.e(TAG, "Error sending location: ${e.message}", e)
+                    }
+                }
+        }
+        */
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
@@ -129,23 +172,31 @@ class LocationService : Service() {
             return START_NOT_STICKY
         }
 
-        // Start requesting updates every 3 seconds
+        // Start requesting updates
         requestUpdates()
         return START_STICKY
     }
 
     private fun requestUpdates() {
-        fusedLocationClient.requestLocationUpdates(
-            locationRequest,
-            locationCallback,
-            Looper.getMainLooper()
-        )
-        Log.d(TAG, "✅ Started high-accuracy updates every 3 seconds.")
+        try {
+            fusedLocationClient.requestLocationUpdates(
+                locationRequest,
+                locationCallback,
+                Looper.getMainLooper()
+            )
+            Log.d(TAG, "✅ Started high-accuracy updates every 10 seconds.")
+        } catch (e: SecurityException) {
+            Log.e(TAG, "Security exception requesting location updates: ${e.message}", e)
+        }
     }
 
     private fun removeUpdates() {
-        fusedLocationClient.removeLocationUpdates(locationCallback)
-        Log.d(TAG, "🛑 Stopped location updates.")
+        try {
+            fusedLocationClient.removeLocationUpdates(locationCallback)
+            Log.d(TAG, "🛑 Stopped location updates.")
+        } catch (e: Exception) {
+            Log.e(TAG, "Error removing location updates: ${e.message}", e)
+        }
     }
 
     // Reverse geocoding (convert lat/lng → address)
@@ -201,9 +252,10 @@ class LocationService : Service() {
                 response: RetrofitResponse<submitresponse>
             ) {
                 if (response.isSuccessful) {
-                    Log.d(TAG, "📡 Sent: ${response.body()?.message}")
+                    Log.d(TAG, "📡 Response: ${response.body()}")
                 } else {
-                    Log.e(TAG, "❗ API Error [${response.code()}]: ${response.errorBody()?.string()}")
+                    val errorBody = response.errorBody()?.string() ?: "No error body"
+                    Log.e(TAG, "❗ API Error [${response.code()}]: $errorBody")
                 }
             }
 

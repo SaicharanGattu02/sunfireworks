@@ -1,21 +1,29 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.crackersworld.android">
-    <uses-permission android:name="android.permission.INTERNET"/>
-    <!-- Permissions for location and foreground service -->
+
+    <!-- 🌐 Internet Access -->
+    <uses-permission android:name="android.permission.INTERNET" />
+
+    <!-- 📍 Location Permissions -->
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION" />
+
+    <!-- ⚙️ Foreground Service Permissions -->
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_LOCATION" />
+
+    <!-- 🔔 Notifications (for Android 13+) -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 
-
     <application
+        android:name="${applicationName}"
         android:label="CRACKER'S WORLD"
         android:icon="@mipmap/ic_launcher"
         android:usesCleartextTraffic="true">
-        <!-- Main Flutter Activity -->
+
+        <!-- 🚀 Main Flutter Activity -->
         <activity
             android:name=".MainActivity"
             android:exported="true"
@@ -26,35 +34,37 @@
             android:allowBackup="false"
             android:fullBackupContent="false"
             android:windowSoftInputMode="adjustResize">
+
+            <!-- Flutter Theme -->
             <meta-data
                 android:name="io.flutter.embedding.android.NormalTheme"
                 android:resource="@style/NormalTheme" />
+
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
 
-        <!-- Foreground Service for Location Updates -->
+        <!-- 🛰 Foreground Location Service -->
         <service
             android:name=".LocationService"
             android:enabled="true"
-            android:exported="true"
+            android:exported="false"
             android:foregroundServiceType="location" />
 
-        <!-- Flutter Embedding -->
+        <!-- 🧩 Required by Flutter engine -->
         <meta-data
             android:name="flutterEmbedding"
             android:value="2" />
 
-        <!-- Optional: Google Maps API Key for Geocoding -->
-            <meta-data
-                android:name="com.google.android.geo.API_KEY"
-                android:value="AIzaSyD0-eauuJ1zBrknaL4uNexkR21cYVOkj7k" />
-
+        <!-- 🗺 Google Maps / Geolocation API Key -->
+        <meta-data
+            android:name="com.google.android.geo.API_KEY"
+            android:value="AIzaSyD0-eauuJ1zBrknaL4uNexkR21cYVOkj7k" />
     </application>
 
-    <!-- Package visibility for Process Text (optional) -->
+    <!-- 🔍 Optional: Allow text-processing intents -->
     <queries>
         <intent>
             <action android:name="android.intent.action.PROCESS_TEXT" />
