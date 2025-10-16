@@ -15,6 +15,9 @@ import 'app_routes/router.dart';
 import 'package:provider/provider.dart';
 import 'utils/AppLogger.dart';
 import 'firebase_options.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:http/http.dart' as http;
+
 
 final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
 
@@ -171,27 +174,35 @@ void showNotification(
     AndroidNotification android,
     Map<String, dynamic> data,
     ) async {
-  AndroidNotificationDetails androidPlatformChannelSpecifics =
-  AndroidNotificationDetails(
-    'high_importance_channel',
-    'High Importance Notifications',
-    importance: Importance.max,
-    priority: Priority.high,
-    playSound: true,
-    icon: '@mipmap/ic_launcher',
-  );
-  NotificationDetails platformChannelSpecifics = NotificationDetails(
-    android: androidPlatformChannelSpecifics,
-  );
+  try {
+    print('Notification data: $data');
+    AndroidNotificationDetails androidPlatformChannelSpecifics =
+    AndroidNotificationDetails(
+      'high_importance_channel',
+      'High Importance Notifications',
+      channelDescription: 'This channel is used for important notifications.',
+      importance: Importance.max,
+      priority: Priority.high,
+      playSound: true,
+      icon: '@mipmap/ic_launcher',
+    );
+    NotificationDetails platformChannelSpecifics = NotificationDetails(
+      android: androidPlatformChannelSpecifics,
+    );
 
-  await flutterLocalNotificationsPlugin.show(
-    notification.hashCode,
-    notification.title,
-    notification.body,
-    platformChannelSpecifics,
-    payload: jsonEncode(data),
-  );
+    await flutterLocalNotificationsPlugin.show(
+      notification.hashCode,
+      notification.title ?? 'Notification',
+      notification.body ?? 'New message received',
+      platformChannelSpecifics,
+      payload: jsonEncode(data, toEncodable: (obj) => obj.toString()),
+    );
+  } catch (e, stackTrace) {
+    print('Error showing notification: $e');
+    print('Stack trace: $stackTrace');
+  }
 }
+
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
